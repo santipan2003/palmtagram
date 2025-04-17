@@ -9,8 +9,18 @@ import { useSidebar } from "@/components/ui/sidebar";
 
 export default function ChatPage() {
   const isMobile = useMobile();
-  const [activeChat, setActiveChat] = useState<string | null>("1");
+  const [activeChat, setActiveChat] = useState<string | null>(null);
   const { setOpen } = useSidebar();
+
+  // Set initial chat for desktop users only
+  useEffect(() => {
+    // Clear activeChat on component mount for mobile
+    if (isMobile) {
+      setActiveChat(null);
+    } else {
+      setActiveChat("1");
+    }
+  }, [isMobile]);
 
   // Auto-collapse sidebar on chat page for desktop
   useEffect(() => {
@@ -21,11 +31,9 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-6rem)] border rounded-lg overflow-hidden">
-      {/* Conversations Sidebar */}
-      {(!isMobile || (isMobile && !activeChat)) && (
-        <div
-          className={`${isMobile ? "w-full" : "w-80"} border-r flex-shrink-0`}
-        >
+      {/* For mobile: Show ConversationList when no active chat */}
+      {isMobile && !activeChat && (
+        <div className="w-full">
           <ConversationList
             conversations={mockConversations}
             activeChat={activeChat}
@@ -34,26 +42,48 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Chat Area */}
-      {(!isMobile || (isMobile && activeChat)) && (
+      {/* For mobile: Show ChatConversation when there's an active chat */}
+      {isMobile && activeChat && (
         <div className="flex-1 flex flex-col min-w-0">
-          {activeChat ? (
-            <ChatConversation
-              conversation={mockConversations.find((c) => c.id === activeChat)!}
-              onBack={() => isMobile && setActiveChat(null)}
-              isMobile={isMobile}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <h3 className="text-lg font-medium">Select a conversation</h3>
-                <p className="text-muted-foreground">
-                  Choose a conversation from the list to start chatting
-                </p>
-              </div>
-            </div>
-          )}
+          <ChatConversation
+            conversation={mockConversations.find((c) => c.id === activeChat)!}
+            onBack={() => setActiveChat(null)}
+            isMobile={true}
+          />
         </div>
+      )}
+
+      {/* For desktop: Show split view with ConversationList and ChatArea */}
+      {!isMobile && (
+        <>
+          <div className="w-80 border-r flex-shrink-0">
+            <ConversationList
+              conversations={mockConversations}
+              activeChat={activeChat}
+              onSelectChat={(id) => setActiveChat(id)}
+            />
+          </div>
+          <div className="flex-1 flex flex-col min-w-0">
+            {activeChat ? (
+              <ChatConversation
+                conversation={
+                  mockConversations.find((c) => c.id === activeChat)!
+                }
+                onBack={() => {}}
+                isMobile={false}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium">Select a conversation</h3>
+                  <p className="text-muted-foreground">
+                    Choose a conversation from the list to start chatting
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
