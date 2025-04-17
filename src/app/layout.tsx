@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   description: "A modern social media platform",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   // Get sidebar state from cookies
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sidebarState = cookieStore.get("sidebar:state")?.value;
   const defaultOpen = sidebarState !== "false"; // Default to open if not explicitly closed
 
