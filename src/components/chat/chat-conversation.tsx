@@ -40,12 +40,14 @@ interface ChatConversationProps {
   conversation: Conversation;
   backUrl?: string;
   isMobile: boolean;
+  onBack?: () => void;
 }
 
 export default function ChatConversation({
   conversation,
   backUrl = "/chat",
   isMobile,
+  onBack,
 }: ChatConversationProps) {
   const router = useRouter();
   const [newMessage, setNewMessage] = useState("");
@@ -103,7 +105,11 @@ export default function ChatConversation({
   ]);
 
   const handleBack = () => {
-    router.push(backUrl);
+    if (onBack) {
+      onBack(); // Use the callback if provided
+    } else {
+      router.push(backUrl); // Fall back to URL navigation
+    }
   };
 
   // Scroll to bottom when messages change
