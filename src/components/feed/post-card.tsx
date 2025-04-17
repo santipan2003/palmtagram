@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
 interface PostUser {
   name: string;
@@ -98,11 +99,15 @@ export default function PostCard({ post }: { post: PostProps }) {
       <CardContent className="p-4 pt-0">
         <p className="mb-3">{post.content}</p>
         {post.image && (
-          <div className="rounded-md overflow-hidden">
-            <img
-              src={post.image || "/placeholder.svg"}
+          <div className="rounded-md overflow-hidden relative w-full h-[300px]">
+            <Image
+              src={post.image}
               alt="Post content"
-              className="w-full h-auto object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 700px"
+              className="object-cover"
+              placeholder="blur"
+              blurDataURL="/placeholder.svg"
             />
           </div>
         )}

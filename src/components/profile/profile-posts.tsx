@@ -18,6 +18,7 @@ import { mockProfileUser } from "@/lib/data/mock-data";
 import type { ProfilePost } from "@/lib/data/mock-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMobile } from "@/hooks/use-mobile";
+import Image from "next/image";
 
 export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
   const router = useRouter();
@@ -127,11 +128,18 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
                   className="absolute inset-0 overflow-hidden border-0 rounded-sm cursor-pointer"
                   onClick={() => openPostDetails(post)}
                 >
-                  <img
-                    src={post.image || "/placeholder.svg"}
-                    alt={`Post ${post.id}`}
-                    className="w-full h-full object-cover"
-                  />
+                  {/* grid image */}
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={post.image || "/placeholder.svg"}
+                      alt={`Post ${post.id}`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                      className="object-cover"
+                      placeholder="blur"
+                      blurDataURL="/placeholder.svg"
+                    />
+                  </div>
                   <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-200 flex items-center justify-center opacity-0 hover:opacity-100">
                     <div className="flex gap-4 text-white">
                       <div className="flex items-center gap-1">
@@ -407,11 +415,15 @@ function MobilePostDetail({
         </div>
 
         {/* Post Image */}
-        <div className="w-full aspect-square bg-black flex items-center justify-center">
-          <img
+        <div className="w-full aspect-square bg-black relative">
+          <Image
             src={post.image || "/placeholder.svg"}
             alt={`Post ${post.id}`}
-            className="w-full h-full object-contain"
+            fill
+            sizes="100vw"
+            className="object-contain"
+            placeholder="blur"
+            blurDataURL="/placeholder.svg"
           />
         </div>
 

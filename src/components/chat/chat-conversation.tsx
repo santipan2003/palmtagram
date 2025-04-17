@@ -16,6 +16,7 @@ import {
   ImageIcon,
   Smile,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Conversation = {
   id: string;
@@ -37,15 +38,16 @@ type Message = {
 
 interface ChatConversationProps {
   conversation: Conversation;
-  onBack: () => void;
+  backUrl?: string;
   isMobile: boolean;
 }
 
 export default function ChatConversation({
   conversation,
-  onBack,
+  backUrl = "/chat",
   isMobile,
 }: ChatConversationProps) {
+  const router = useRouter();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -100,6 +102,10 @@ export default function ChatConversation({
     },
   ]);
 
+  const handleBack = () => {
+    router.push(backUrl);
+  };
+
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
@@ -147,7 +153,12 @@ export default function ChatConversation({
       {/* Chat Header - Fixed height */}
       <div className="py-3 px-4 border-b flex items-center bg-background z-10">
         {isMobile && (
-          <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBack}
+            className="mr-2"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}

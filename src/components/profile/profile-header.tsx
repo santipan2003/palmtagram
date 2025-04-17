@@ -16,11 +16,13 @@ interface ProfileUser {
 
 export default function ProfileHeader({ user }: { user: ProfileUser }) {
   return (
-    <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-      <Avatar className="h-24 w-24 md:h-32 md:w-32">
-        <AvatarImage src={user.avatar} alt={user.name} />
-        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-      </Avatar>
+    <div className="flex flex-col md:flex-row items-center md:items-center gap-24 mb-8">
+      <div className="flex justify-center">
+        <Avatar className="h-24 w-24 md:h-48 md:w-48">
+          <AvatarImage src={user.avatar} alt={user.name} />
+          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+      </div>
 
       <div className="flex-1 text-center md:text-left">
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">

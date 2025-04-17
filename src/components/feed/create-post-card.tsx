@@ -28,7 +28,7 @@ export default function CreatePostCard() {
           <div className="flex-1">
             <Textarea
               placeholder="What's on your mind?"
-              className="resize-none border-none focus-visible:ring-0 p-0 text-base min-h-[60px] bg-transparent"
+              className="resize-none border-none focus-visible:ring-0 px-3 py-2 text-base min-h-[60px] bg-transparent"
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
             />
