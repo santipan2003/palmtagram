@@ -131,7 +131,7 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
 
         <TabsContent value="posts" className="mt-6">
           <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 gap-1 md:gap-4"
+            className="grid grid-cols-3 gap-1 md:gap-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -150,7 +150,7 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
                   onClick={() => openPostDetails(post)}
                 >
                   {/* grid image */}
-                  <div className="relative h-full w-full">
+                  <div className="h-full w-full">
                     <Image
                       src={post.image || "/placeholder.svg"}
                       alt={`Post ${post.id}`}
