@@ -150,7 +150,7 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
                   onClick={() => openPostDetails(post)}
                 >
                   {/* grid image */}
-                  <div className="h-full w-full">
+                  <div className="h-full w-full object-cover transition-all duration-300">
                     <Image
                       src={post.image || "/placeholder.svg"}
                       alt={`Post ${post.id}`}
