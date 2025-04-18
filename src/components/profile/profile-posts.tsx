@@ -84,36 +84,57 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
   return (
     <>
       <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="grid grid-cols-3 h-12 bg-transparent border-t">
+        <TabsList className="w-full grid grid-cols-3 h-14 bg-gradient-to-b from-background to-background/80 border-t border-b border-muted/30 backdrop-blur-sm">
           <TabsTrigger
             value="posts"
-            className="data-[state=active]:bg-transparent data-[state=active]:border-t-2 data-[state=active]:border-foreground rounded-none"
+            className="relative flex items-center justify-center h-full text-sm font-medium transition-all duration-300 data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:bg-muted/20 rounded-none"
           >
             <Grid className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Posts</span>
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-purple-500"
+              initial={false}
+              animate={{ scaleX: 0 }}
+              transition={{ duration: 0.3 }}
+              data-state-active="scaleX: 1"
+            />
           </TabsTrigger>
           <TabsTrigger
             value="saved"
-            className="data-[state=active]:bg-transparent data-[state=active]:border-t-2 data-[state=active]:border-foreground rounded-none"
+            className="relative flex items-center justify-center h-full text-sm font-medium transition-all duration-300 data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:bg-muted/20 rounded-none"
           >
             <BookmarkIcon className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Saved</span>
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-purple-500"
+              initial={false}
+              animate={{ scaleX: 0 }}
+              transition={{ duration: 0.3 }}
+              data-state-active="scaleX: 1"
+            />
           </TabsTrigger>
           <TabsTrigger
             value="tagged"
-            className="data-[state=active]:bg-transparent data-[state=active]:border-t-2 data-[state=active]:border-foreground rounded-none"
+            className="relative flex items-center justify-center h-full text-sm font-medium transition-all duration-300 data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:bg-muted/20 rounded-none"
           >
             <UserIcon className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Tagged</span>
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-purple-500"
+              initial={false}
+              animate={{ scaleX: 0 }}
+              transition={{ duration: 0.3 }}
+              data-state-active="scaleX: 1"
+            />
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="posts" className="mt-6">
           <motion.div
             className="grid grid-cols-2 sm:grid-cols-3 gap-1 md:gap-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
             {posts.map((post) => (
               <motion.div
@@ -159,23 +180,39 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
         </TabsContent>
 
         <TabsContent value="saved" className="mt-6">
-          <div className="text-center py-12">
-            <BookmarkIcon className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-medium">No saved posts yet</h3>
-            <p className="text-muted-foreground">
-              When you save posts, they&apos;ll appear here.
+          <motion.div
+            className="text-center py-16 bg-muted/50 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <BookmarkIcon className="h-12 w-12 mx-auto text-muted-foreground/70" />
+            <h3 className="mt-4 text-xl font-semibold text-foreground">
+              No Saved Posts Yet
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+              Save posts to revisit them later. They&apos;ll appear here for
+              easy access.
             </p>
-          </div>
+          </motion.div>
         </TabsContent>
 
         <TabsContent value="tagged" className="mt-6">
-          <div className="text-center py-12">
-            <UserIcon className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-medium">No tagged posts</h3>
-            <p className="text-muted-foreground">
-              When people tag you in posts, they&apos;ll appear here.
+          <motion.div
+            className="text-center py-16 bg-muted/50 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <UserIcon className="h-12 w-12 mx-auto text-muted-foreground/70" />
+            <h3 className="mt-4 text-xl font-semibold text-foreground">
+              No Tagged Posts
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+              When you&apos;re tagged in posts, they&apos;ll show up here for
+              you to explore.
             </p>
-          </div>
+          </motion.div>
         </TabsContent>
       </Tabs>
 

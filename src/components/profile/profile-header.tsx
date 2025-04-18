@@ -16,8 +16,8 @@ interface ProfileUser {
 
 export default function ProfileHeader({ user }: { user: ProfileUser }) {
   return (
-    <div className="flex flex-col mb-4 md:mb-8">
-      <div className="flex flex-row items-center gap-4 md:gap-24">
+    <div className="flex flex-col items-center mb-4 md:mb-8 mx-auto max-w-3xl w-full px-4">
+      <div className="flex flex-row items-center gap-4 md:gap-24 w-full">
         {/* Avatar Profile */}
         <div>
           <Avatar className="h-20 w-20 md:h-48 md:w-48">
