@@ -156,7 +156,7 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
                       alt={`Post ${post.id}`}
                       fill
                       sizes="(max-width: 640px) 50vw, 33vw"
-                      className="object-cover w-full h-full"
+                      className="object-cover"
                       placeholder="blur"
                       blurDataURL="/placeholder.svg"
                     />
