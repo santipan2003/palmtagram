@@ -155,11 +155,11 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
                       src={post.image || "/placeholder.svg"}
                       alt={`Post ${post.id}`}
                       fill
-                      sizes="(max-width: 640px) 50vw, 33vw" // แก้ไขค่า sizes สำหรับมือถือ
-                      className="object-cover w-full h-full" // เพิ่ม w-full และ h-full
+                      sizes="(max-width: 640px) 50vw, 33vw" 
+                      className="object-cover w-full h-full" 
                       placeholder="blur"
                       blurDataURL="/placeholder.svg"
-                      priority={post.id <= 4} // เพิ่ม priority ให้กับรูปภาพ 4 รูปแรก
+                      priority={post.id <= 4} 
                     />
                   </div>
                   <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-200 flex items-center justify-center opacity-0 hover:opacity-100">
