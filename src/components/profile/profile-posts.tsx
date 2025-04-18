@@ -452,7 +452,7 @@ function MobilePostDetail({
         </div>
 
         {/* Post Image */}
-        <div className="w-full aspect-square bg-black relative">
+        <div className="w-full aspect-square bg-black">
           <Image
             src={post.image || "/placeholder.svg"}
             alt={`Post ${post.id}`}
