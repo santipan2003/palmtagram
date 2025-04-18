@@ -146,7 +146,7 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
                 layout
               >
                 <Card
-                  className="absolute inset-0 overflow-hidden border-0 rounded-sm cursor-pointer"
+                  className="w-full h-full absolute inset-0 overflow-hidden border-0 rounded-sm cursor-pointer"
                   onClick={() => openPostDetails(post)}
                 >
                   {/* grid image */}
@@ -155,11 +155,10 @@ export default function ProfilePosts({ posts }: { posts: ProfilePost[] }) {
                       src={post.image || "/placeholder.svg"}
                       alt={`Post ${post.id}`}
                       fill
-                      sizes="(max-width: 640px) 50vw, 33vw" 
-                      className="object-cover w-full h-full" 
+                      sizes="(max-width: 640px) 50vw, 33vw"
+                      className="object-cover w-full h-full"
                       placeholder="blur"
                       blurDataURL="/placeholder.svg"
-                      priority={post.id <= 4} 
                     />
                   </div>
                   <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-200 flex items-center justify-center opacity-0 hover:opacity-100">
