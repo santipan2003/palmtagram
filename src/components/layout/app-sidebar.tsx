@@ -34,7 +34,7 @@ import {
 import { useMobile } from "@/hooks/use-mobile";
 
 // Pages that should automatically collapse the sidebar
-const COLLAPSE_ON_PAGES = ["/chat", "/profile"];
+const COLLAPSE_ON_PAGES = ["/chat"];
 
 export default function AppSidebar() {
   const pathname = usePathname();

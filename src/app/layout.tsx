@@ -1,45 +1,33 @@
-import type React from "react";
-import type { Metadata } from "next";
+// app/layout.tsx    ← your single true root layout
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import AppSidebar from "@/components/layout/app-sidebar";
-import { SidebarInset } from "@/components/ui/sidebar";
-import { cookies } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Palmtagram",
   description: "A modern social media platform",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  // Get sidebar state from cookies
-  const cookieStore = await cookies();
-  const sidebarState = cookieStore.get("sidebar:state")?.value;
-  const defaultOpen = sidebarState !== "false"; // Default to open if not explicitly closed
-
+}) {
   return (
+    // suppressHydrationWarning silences mismatch complaints on <html>
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        {/* Move your ThemeProvider here so its script to set the
+            class on <html> runs before hydration */}
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider defaultOpen={defaultOpen}>
-            <AppSidebar />
-            <SidebarInset>
-              <main className="min-h-screen p-4 md:p-6">{children}</main>
-            </SidebarInset>
-          </SidebarProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>
