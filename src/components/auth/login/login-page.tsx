@@ -1,147 +1,156 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Image from "next/image";
-import Link from "next/link";
-import { LogIn, Chrome, Facebook } from "lucide-react";
-import { useState, FormEvent, ChangeEvent } from "react";
+import { Chrome, Facebook } from "lucide-react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    contactInfo: "",
-    password: "",
-  });
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleGoogleLogin = () => {
+    setIsGoogleLoading(true);
+    router.push(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`);
   };
 
- const handleSubmit = async (e: FormEvent) => {
-   e.preventDefault();
-   const resp = await fetch("/api/login", {
-     method: "POST",
-     headers: { "Content-Type": "application/json" },
-     body: JSON.stringify(formData),
-   });
-   if (resp.ok) {
-     // หลังเซ็ต cookie แล้ว ให้ push กลับ root
-     router.push("/");
-     // หรือถ้าต้องการให้ SSR รีเฟรช server component:
-     // router.refresh()
-   } else {
-     // แสดง error message
-     const { error } = await resp.json();
-     alert(error);
-   }
- };
+  const handleFacebookLogin = () => {
+    setIsFacebookLoading(true);
+    router.push(`${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`);
+  };
+
+  // Typewriter animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const letterVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  const TypewriterText = ({ text }: { text: string }) => {
+    return (
+      <motion.span
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {text.split("").map((char, index) => (
+          <motion.span key={index} variants={letterVariants}>
+            {char}
+          </motion.span>
+        ))}
+      </motion.span>
+    );
+  };
 
   return (
-    <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8 space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <Image
-          src="/img/logo.png"
-          alt="Palmtagram Logo"
-          width={150}
-          height={50}
-          className="mx-auto"
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="max-w-md w-full bg-white dark:bg-black shadow-lg  rounded-2xl p-8 relative overflow-hidden"
+      >
+        {/* Logo */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex justify-center mb-2"
+        >
+          <Image
+            src="/img/logo2.png"
+            alt="App Logo"
+            width={200}
+            height={200}
+            className="object-contain"
+            priority
+          />
+        </motion.div>
+
+        {/* Header with Typewriter Effect */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-xl md:text-3xl font-bold text-gray-800 dark:text-gray-50">
+            <TypewriterText text="Welcome to Palmtagram" />
+          </h1>
+          <p className="text-xs md:text-sm text-gray-500 dark:text-gray-300 mt-2">
+            <TypewriterText text="Join your community with a single click" />
+          </p>
+        </motion.div>
+
+        {/* Buttons */}
+        <div className="flex flex-col gap-4">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center gap-3 py-6 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleGoogleLogin}
+              disabled={isGoogleLoading}
+            >
+              <Chrome className="h-6 w-6 text-red-500 dark:text-red-400" />
+              <span className="font-medium">
+                {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+              </span>
+            </Button>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+          >
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center gap-3 py-6 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleFacebookLogin}
+              disabled={isFacebookLoading}
+            >
+              <Facebook className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <span className="font-medium">
+                {isFacebookLoading ? "Connecting..." : "Continue with Facebook"}
+              </span>
+            </Button>
+          </motion.div>
+        </div>
+
+        {/* Decorative Element */}
+        <motion.div
+          className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-200 dark:bg-indigo-800 opacity-20 rounded-full"
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         />
-        <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-          Connect with friends
-        </p>
-      </div>
-
-      {/* Form */}
-      <form className="space-y-4" onSubmit={handleSubmit}>
-        <div>
-          <Input
-            type="text"
-            name="contactInfo"
-            placeholder="+66 123 456 7890 or email"
-            value={formData.contactInfo}
-            onChange={handleChange}
-            className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
-        </div>
-        <div>
-          <Input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
-        </div>
-        <div>
-          <Button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg dark:bg-blue-500 dark:hover:bg-blue-600"
-          >
-            <LogIn className="mr-2 h-4 w-4" /> Log In
-          </Button>
-        </div>
-      </form>
-
-      {/* Social Logins */}
-      <div className="space-y-4">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200 dark:border-gray-600"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 rounded-lg border-gray-300 dark:border-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-            asChild
-          >
-            <a href="#">
-              <Chrome className="h-5 w-5" />
-              Google
-            </a>
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 rounded-lg border-gray-300 dark:border-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-            asChild
-          >
-            <a href="#">
-              <Facebook className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              Facebook
-            </a>
-          </Button>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="text-center text-sm space-y-2">
-        <p>
-          <Link
-            href="/register"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Don&apos;t have an account? Sign up
-          </Link>
-        </p>
-        <p>
-          <Link
-            href="/forgot-password"
-            className="text-gray-500 dark:text-gray-400 hover:underline"
-          >
-            Forgot password?
-          </Link>
-        </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

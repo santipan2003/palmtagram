@@ -32,6 +32,7 @@ import {
   Sun,
 } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
+import { useAuth, UserProfile } from "@/lib/auth-context";
 
 // Pages that should automatically collapse the sidebar
 const COLLAPSE_ON_PAGES = ["/chat"];
@@ -44,6 +45,7 @@ export default function AppSidebar() {
 
   // Add mounted state to check if component has mounted
   const [mounted, setMounted] = useState(false);
+  const { user, isLoading, logout } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -56,9 +58,13 @@ export default function AppSidebar() {
     }
   }, [pathname, setOpen]);
 
-  // If not mounted, return null (or show fallback loading state)
-  if (!mounted) {
-    return null;
+  // ถ้ายังไม่ mounted หรือ isLoading, แสดง loading state
+  if (!mounted || isLoading) {
+    return (
+      <div className="container mx-auto py-8 text-center">
+        <p className="text-lg">Loading...</p>
+      </div>
+    );
   }
 
   const mainNavItems = [
@@ -68,7 +74,7 @@ export default function AppSidebar() {
   ];
 
   const profileNavItems = [
-    { name: "Profile", href: "/profile", icon: User },
+    { name: "Profile", href: `/${user?.username}`, icon: User },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
@@ -78,8 +84,23 @@ export default function AppSidebar() {
 
   // If mobile, render bottom bar instead of sidebar
   if (isMobile) {
-    return <MobileBottomBar pathname={pathname} />;
+    return <MobileBottomBar pathname={pathname} user={user} logout={logout} />;
   }
+
+  // แสดง loading state
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-8 text-center">
+        <p className="text-lg">Loading profile...</p>
+      </div>
+    );
+  }
+
+  // Debug: Log user profile เพื่อตรวจสอบ avatarUrl
+  console.log("[AppSidebar] User profile:", user);
+
+  // Get the first character of the username or name for fallback
+  const userInitial = user?.profile?.name?.[0] || user?.username?.[0] || "U";
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -90,8 +111,8 @@ export default function AppSidebar() {
             state === "expanded" ? "items-center gap-2 px-4" : "justify-center"
           }`}
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
-            <Image src="/img/logo.png" alt="Logo" width={32} height={32} />
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg overflow-hidden">
+            <Image src="/img/logo2.png" alt="Logo" width={48} height={48} />
           </div>
           {state === "expanded" && (
             <span className="text-lg font-bold">Palmtagram</span>
@@ -165,28 +186,43 @@ export default function AppSidebar() {
           }`}
         >
           {state === "expanded" ? (
-            <Button variant="ghost" className="w-full justify-start gap-2">
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2"
+              onClick={logout}
+            >
               <Avatar className="h-6 w-6">
-                <AvatarImage src="/img/avatar1.png" alt="User" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarImage
+                  src={user?.profile?.avatarUrl || "/img/avatar1.png"}
+                  alt="User"
+                />
+                <AvatarFallback>{userInitial}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-sm">
-                <span className="font-medium">Alex Johnson</span>
-                <span className="text-xs text-muted-foreground">@alexj</span>
+                <span className="font-medium">
+                  {user?.profile?.name || "Unknown"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {user?.username || "Unknown"}
+                </span>
               </div>
               <LogOut className="ml-auto h-4 w-4" />
             </Button>
           ) : (
             <div className="flex flex-col items-center gap-2">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/img/avatar1.png" alt="User" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarImage
+                  src={user?.profile?.avatarUrl || "/img/avatar1.png"}
+                  alt="User"
+                />
+                <AvatarFallback>{userInitial}</AvatarFallback>
               </Avatar>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-full"
                 title="Logout"
+                onClick={logout}
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -200,7 +236,15 @@ export default function AppSidebar() {
 }
 
 // Mobile bottom navigation bar
-function MobileBottomBar({ pathname }: { pathname: string }) {
+function MobileBottomBar({
+  pathname,
+  user,
+  logout,
+}: {
+  pathname: string;
+  user: UserProfile | null;
+  logout: () => void;
+}) {
   const { theme, setTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -214,6 +258,9 @@ function MobileBottomBar({ pathname }: { pathname: string }) {
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
+
+  // Get the first character of the username or name for fallback
+  const userInitial = user?.profile?.name?.[0] || user?.username?.[0] || "U";
 
   return (
     <>
@@ -266,14 +313,25 @@ function MobileBottomBar({ pathname }: { pathname: string }) {
             )}
           </Button>
 
-          <Button variant="ghost" className="w-full justify-start gap-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2"
+            onClick={logout}
+          >
             <Avatar className="h-6 w-6">
-              <AvatarImage src="/img/avatar1.png" alt="User" />
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarImage
+                src={user?.profile?.avatarUrl || "/img/avatar1.png"}
+                alt="User"
+              />
+              <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-start text-sm">
-              <span className="font-medium">Alex Johnson</span>
-              <span className="text-xs text-muted-foreground">@alexj</span>
+              <span className="font-medium">
+                {user?.profile?.name || "Unknown"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {user?.username || "Unknown"}
+              </span>
             </div>
             <LogOut className="ml-auto h-4 w-4" />
           </Button>
@@ -282,9 +340,12 @@ function MobileBottomBar({ pathname }: { pathname: string }) {
             variant="outline"
             size="sm"
             className="w-full justify-start gap-2"
+            asChild
           >
-            <Settings className="h-4 w-4" />
-            <span>Settings</span>
+            <Link href="/settings">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </Link>
           </Button>
         </div>
       )}

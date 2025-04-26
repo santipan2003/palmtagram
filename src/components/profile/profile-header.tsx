@@ -2,33 +2,44 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 
-interface ProfileUser {
+interface Profile {
   name: string;
-  username: string;
-  avatar: string;
-  bio: string;
-  website: string;
-  location: string;
-  followers: number;
-  following: number;
-  posts: number;
+  avatarUrl: string;
+  _id: string;
 }
 
-export default function ProfileHeader({ user }: { user: ProfileUser }) {
+interface User {
+  _id: string;
+  username: string;
+  email: string;
+  profile: Profile;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function ProfileHeader({ user }: { user: User }) {
+  console.log("ProfileHeader user:", user);
   return (
     <div className="flex flex-col items-center mb-4 md:mb-8 mx-auto max-w-3xl w-full px-4">
       <div className="flex flex-row items-center gap-4 md:gap-24 w-full">
         {/* Avatar Profile */}
         <div>
           <Avatar className="h-20 w-20 md:h-48 md:w-48">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage
+              src={user?.profile?.avatarUrl}
+              alt={user?.profile?.name}
+            />
+            <AvatarFallback>
+              {user?.profile?.name ? user.profile.name.charAt(0) : ""}
+            </AvatarFallback>
           </Avatar>
         </div>
         {/* User Info */}
         <div className="flex-1">
           <div className="flex flex-row items-center gap-2 md:gap-4 mb-2 mt-4 md:mt-0 md:mb-4 flex-wrap">
-            <h1 className="text-base md:text-2xl font-bold">{user.name}</h1>
+            <h1 className="text-base md:text-2xl font-bold">
+              {user?.profile?.name}
+            </h1>
             <div className="flex gap-1 md:gap-2">
               <Button size="sm" className="md:text-base md:py-2 md:px-4">
                 Follow
@@ -52,17 +63,17 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
 
           <div className="flex gap-3 md:gap-6 mb-2 md:mb-4">
             <div className="text-center">
-              <p className="text-sm md:text-base font-bold">{user.posts}</p>
+              <p className="text-sm md:text-base font-bold">123</p>
               <p className="text-xs md:text-sm text-muted-foreground">Posts</p>
             </div>
             <div className="text-center">
-              <p className="text-sm md:text-base font-bold">{user.followers}</p>
+              <p className="text-sm md:text-base font-bold">50.5k</p>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Followers
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm md:text-base font-bold">{user.following}</p>
+              <p className="text-sm md:text-base font-bold">1</p>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Following
               </p>
@@ -72,9 +83,9 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
           {/* User Bio - Hidden on Mobile */}
           <div className="hidden md:block space-y-1">
             <p className="text-base font-medium">@{user.username}</p>
-            <p className="text-base">{user.bio}</p>
-            <p className="text-sm">{user.website}</p>
-            <p className="text-sm text-muted-foreground">{user.location}</p>
+            <p className="text-base">Bio</p>
+            <p className="text-sm">Website</p>
+            <p className="text-sm text-muted-foreground">Location</p>
           </div>
         </div>
       </div>
@@ -82,9 +93,9 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
       {/* User Bio - Shown only on Mobile, as a new row */}
       <div className="block md:hidden mt-2 space-y-0.5 text-left">
         <p className="text-sm font-medium">@{user.username}</p>
-        <p className="text-sm">{user.bio}</p>
-        <p className="text-xs">{user.website}</p>
-        <p className="text-xs text-muted-foreground">{user.location}</p>
+        <p className="text-sm">Bio</p>
+        <p className="text-xs">Website</p>
+        <p className="text-xs text-muted-foreground">Location</p>
       </div>
     </div>
   );
