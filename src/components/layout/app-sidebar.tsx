@@ -32,7 +32,8 @@ import {
   Sun,
 } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
-import { useAuth, UserProfile } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
+import { UserProfile } from "@/interfaces/auth.interface";
 
 // Pages that should automatically collapse the sidebar
 const COLLAPSE_ON_PAGES = ["/chat"];
@@ -95,9 +96,6 @@ export default function AppSidebar() {
       </div>
     );
   }
-
-  // Debug: Log user profile เพื่อตรวจสอบ avatarUrl
-  console.log("[AppSidebar] User profile:", user);
 
   // Get the first character of the username or name for fallback
   const userInitial = user?.profile?.name?.[0] || user?.username?.[0] || "U";
@@ -252,7 +250,7 @@ function MobileBottomBar({
     { name: "Feed", href: "/", icon: Home },
     { name: "Messages", href: "/chat", icon: MessageSquare },
     { name: "Notifications", href: "/notifications", icon: Bell },
-    { name: "Profile", href: "/profile", icon: User },
+    { name: "Profile", href: `/${user?.username}`, icon: User },
   ];
 
   const toggleTheme = () => {

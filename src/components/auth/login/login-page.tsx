@@ -3,23 +3,26 @@
 import { Button } from "@/components/ui/button";
 import { Chrome, Facebook } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { authService } from "@/services/auth/auth.service";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isFacebookLoading, setIsFacebookLoading] = useState(false);
 
   const handleGoogleLogin = () => {
     setIsGoogleLoading(true);
-    router.push(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`);
+    // ใช้ authService แทนการเขียน URL โดยตรง
+    window.location.href = authService.getOAuthURL("google");
+    // ใช้ window.location.href แทน router.push เนื่องจากเป็นการนำทางไปยัง OAuth provider
   };
 
   const handleFacebookLogin = () => {
     setIsFacebookLoading(true);
-    router.push(`${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`);
+    // ใช้ authService แทนการเขียน URL โดยตรง
+    window.location.href = authService.getOAuthURL("facebook");
+    // ใช้ window.location.href แทน router.push เนื่องจากเป็นการนำทางไปยัง OAuth provider
   };
 
   // Typewriter animation variants

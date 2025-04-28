@@ -3,24 +3,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-export interface UserProfile {
-  _id: string;
-  email: string;
-  username?: string;
-  profile?: {
-    name: string;
-    avatarUrl: string;
-  };
-}
-
-interface AuthContextType {
-  user: UserProfile | null;
-  isLoading: boolean;
-  error: string | null;
-  setUser: (user: UserProfile | null) => void;
-  logout: () => void;
-}
+import { UserProfile, AuthContextType } from "@/interfaces/auth.interface";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -66,7 +49,11 @@ export function AuthProvider({
           const data = await response.json();
           setUser(data);
         } catch (err) {
-          setError(`An error occurred while fetching profile: ${err instanceof Error ? err.message : String(err)}`);
+          setError(
+            `An error occurred while fetching profile: ${
+              err instanceof Error ? err.message : String(err)
+            }`
+          );
         } finally {
           setIsLoading(false);
         }

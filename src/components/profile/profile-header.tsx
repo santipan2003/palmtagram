@@ -1,21 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
-
-interface Profile {
-  name: string;
-  avatarUrl: string;
-  _id: string;
-}
-
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  profile: Profile;
-  createdAt: string;
-  updatedAt: string;
-}
+import Image from "next/image";
+import { User } from "@/interfaces/profile.interface";
 
 export default function ProfileHeader({ user }: { user: User }) {
   console.log("ProfileHeader user:", user);
@@ -25,13 +12,24 @@ export default function ProfileHeader({ user }: { user: User }) {
         {/* Avatar Profile */}
         <div>
           <Avatar className="h-20 w-20 md:h-48 md:w-48">
-            <AvatarImage
-              src={user?.profile?.avatarUrl}
-              alt={user?.profile?.name}
-            />
-            <AvatarFallback>
-              {user?.profile?.name ? user.profile.name.charAt(0) : ""}
-            </AvatarFallback>
+            {user?.profile?.avatarUrl ? (
+              <div className="h-full w-full relative overflow-hidden rounded-full">
+                <Image
+                  src={user?.profile?.avatarUrl}
+                  alt={user.profile.name}
+                  fill
+                  unoptimized={true}
+                  className="object-cover"
+                  sizes="(max-width: 768px) 80px, 192px"
+                  referrerPolicy="no-referrer"
+                  priority
+                />
+              </div>
+            ) : (
+              <AvatarFallback>
+                {user?.profile?.name ? user.profile.name.charAt(0) : ""}
+              </AvatarFallback>
+            )}
           </Avatar>
         </div>
         {/* User Info */}
@@ -91,7 +89,7 @@ export default function ProfileHeader({ user }: { user: User }) {
       </div>
 
       {/* User Bio - Shown only on Mobile, as a new row */}
-      <div className="block md:hidden mt-2 space-y-0.5 text-left">
+      <div className="block md:hidden mt-2 space-y-0.5 w-full self-start">
         <p className="text-sm font-medium">@{user.username}</p>
         <p className="text-sm">Bio</p>
         <p className="text-xs">Website</p>
