@@ -167,13 +167,13 @@ export const profileService = {
   },
 
   /**
-   * ติดตามผู้ใช้
+   * เริ่มติดตามผู้ใช้
    */
   followUser: async (
     userId: string
-  ): Promise<{ success: boolean; message?: string }> => {
+  ): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await apiClient.post(`/users/${userId}/follow`);
+      const response = await apiClient.post("/follows", { userId });
       return response.data;
     } catch (error) {
       console.error("Error following user:", error);
@@ -182,13 +182,13 @@ export const profileService = {
   },
 
   /**
-   * เลิกติดตามผู้ใช้
+   * ยกเลิกการติดตามผู้ใช้
    */
   unfollowUser: async (
     userId: string
-  ): Promise<{ success: boolean; message?: string }> => {
+  ): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await apiClient.delete(`/users/${userId}/follow`);
+      const response = await apiClient.delete(`/follows/${userId}`);
       return response.data;
     } catch (error) {
       console.error("Error unfollowing user:", error);
@@ -197,27 +197,132 @@ export const profileService = {
   },
 
   /**
-   * ดึงรายชื่อผู้ที่กำลังติดตาม
+   * ตรวจสอบว่ากำลังติดตามผู้ใช้หรือไม่
    */
-  getFollowing: async (userId: string): Promise<User[]> => {
+  checkFollowStatus: async (userId: string): Promise<boolean> => {
     try {
-      const response = await apiClient.get(`/users/${userId}/following`);
-      return response.data;
+      const response = await apiClient.get(`/follows/check/${userId}`);
+      console.log(`Follow check response for ${userId}:`, response.data);
+
+      // รองรับทั้งสองรูปแบบ
+      return (
+        response.data.following === true || response.data.isFollowing === true
+      );
     } catch (error) {
-      console.error("Error fetching following list:", error);
-      throw error;
+      console.error("Error checking follow status:", error);
+      return false;
     }
   },
 
   /**
-   * ดึงรายชื่อผู้ติดตาม
+   * ดึงรายชื่อผู้ติดตามของผู้ใช้
    */
   getFollowers: async (userId: string): Promise<User[]> => {
     try {
-      const response = await apiClient.get(`/users/${userId}/followers`);
-      return response.data;
+      const response = await apiClient.get(`/follows/followers/${userId}`);
+      console.log(
+        "Followers API response:",
+        JSON.stringify(response.data, null, 2)
+      );
+
+      if (Array.isArray(response.data)) {
+        // ระบุ type ชัดเจนและใช้ type guard เพื่อกรอง null
+        const mappedFollowers: (User | null)[] = response.data.map((item) => {
+          if (item.followerId && typeof item.followerId === "object") {
+            return item.followerId as User;
+          } else if (item.userId && typeof item.userId === "object") {
+            return item.userId as User;
+          } else {
+            console.warn("Unexpected follow record structure:", item);
+            return null;
+          }
+        });
+
+        // ใช้ type predicate เพื่อให้ TypeScript เข้าใจว่าเราได้กรอง null ออกแล้ว
+        return mappedFollowers.filter((user): user is User => user !== null);
+      } else {
+        return [];
+      }
     } catch (error) {
-      console.error("Error fetching followers list:", error);
+      console.error("Error fetching followers:", error);
+      return [];
+    }
+  },
+
+  /**
+   * ดึงรายชื่อผู้ที่กำลังติดตาม
+   */
+  getFollowing: async (userId: string): Promise<User[]> => {
+    try {
+      const response = await apiClient.get(`/follows/following/${userId}`);
+      console.log(
+        "Following API response:",
+        JSON.stringify(response.data, null, 2)
+      );
+
+      if (Array.isArray(response.data)) {
+        // ระบุ type ชัดเจนและใช้ type guard เพื่อกรอง null
+        const mappedFollowing: (User | null)[] = response.data.map((item) => {
+          if (item.userId && typeof item.userId === "object") {
+            return item.userId as User;
+          } else if (item.followerId && typeof item.followerId === "object") {
+            return item.followerId as User;
+          } else {
+            console.warn("Unexpected following record structure:", item);
+            return null;
+          }
+        });
+
+        // ใช้ type predicate เพื่อให้ TypeScript เข้าใจว่าเราได้กรอง null ออกแล้ว
+        return mappedFollowing.filter((user): user is User => user !== null);
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching following users:", error);
+      return [];
+    }
+  },
+
+  /**
+   * นับจำนวนผู้ติดตามของผู้ใช้
+   */
+  getFollowersCount: async (userId: string): Promise<number> => {
+    try {
+      const response = await apiClient.get(
+        `/follows/followers/count/${userId}`
+      );
+      return response.data.count;
+    } catch (error) {
+      console.error("Error fetching followers count:", error);
+      return 0;
+    }
+  },
+
+  /**
+   * นับจำนวนผู้ที่กำลังติดตาม
+   */
+  getFollowingCount: async (userId: string): Promise<number> => {
+    try {
+      const response = await apiClient.get(
+        `/follows/following/count/${userId}`
+      );
+      return response.data.count;
+    } catch (error) {
+      console.error("Error fetching following count:", error);
+      return 0;
+    }
+  },
+
+  /**
+   * ดึงรายชื่อผู้ใช้ยอดนิยมตามจำนวนผู้ติดตาม
+   */
+  getPopularUsers: async (): Promise<User[]> => {
+    try {
+      const response = await apiClient.get("/follows/popular");
+      return response.data.users;
+    } catch (error) {
+      console.error("Error fetching popular users:", error);
       throw error;
     }
   },

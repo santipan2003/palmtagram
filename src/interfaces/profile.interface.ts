@@ -5,12 +5,16 @@ export interface User {
   profile: Profile;
   createdAt: string;
   updatedAt: string;
+  
 }
 
 export interface Profile {
   name: string;
   avatarUrl: string;
   _id: string;
+  bio: string;
+  website: string;
+  location: string;
 }
 
 export interface Media {
