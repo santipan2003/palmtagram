@@ -15,11 +15,14 @@ import { profileService } from "@/services/profile/profile.service";
 // เปลี่ยนจาก toast มาเป็น sonner
 import { toast } from "sonner";
 import FollowersDialog from "./followers-dialog";
+import { useRouter } from "next/navigation";
+import { chatService } from "@/services/chat/chat.service";
+import { ensureWebSocketToken } from "@/lib/websocket-auth";
 
 export default function ProfileHeader({ user }: { user: User }) {
   // ใช้ useAuth เพื่อเข้าถึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
   const { user: currentUser } = useAuth();
-
+  const router = useRouter();
   // State สำหรับแสดงว่ามีการติดตามผู้ใช้นี้หรือไม่
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
@@ -30,7 +33,54 @@ export default function ProfileHeader({ user }: { user: User }) {
   const [dialogTab, setDialogTab] = useState<"followers" | "following">(
     "followers"
   );
+  const [isLoadingMessage, setIsLoadingMessage] = useState(false);
 
+  // เพิ่มฟังก์ชัน handleMessageClick
+  // Update the handleMessageClick function
+  // เพิ่มใน handleMessageClick
+  const handleMessageClick = async () => {
+    if (!currentUser) {
+      toast.error("คุณต้องเข้าสู่ระบบก่อน", {
+        description: "กรุณาเข้าสู่ระบบเพื่อส่งข้อความ",
+      });
+      return;
+    }
+
+    setIsLoadingMessage(true);
+
+    try {
+      // อัปเดตข้อมูลผู้ใช้ใน localStorage ก่อน
+      localStorage.setItem(
+        "user_data",
+        JSON.stringify({
+          _id: currentUser._id,
+          username: currentUser.username,
+        })
+      );
+
+      // เพิ่มการรอเพื่อให้แน่ใจว่า localStorage ถูกอัปเดต
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // ตรวจสอบว่ามี WebSocket token
+      await ensureWebSocketToken();
+
+      // สร้างหรือดึงห้องแชทส่วนตัวกับผู้ใช้นี้
+      const room = await chatService.getPrivateChat(user._id);
+
+      // เพิ่มการหน่วงเวลาอีก 1 วินาที เพื่อให้ backend มีเวลาอัปเดตข้อมูลห้องแชท
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // นำทางไปยังห้องแชท
+      router.push(`/chat/${room._id}`); 
+    } catch (error) {
+      console.error("ไม่สามารถสร้างห้องแชทได้:", error);
+      toast.error("ไม่สามารถสร้างห้องแชทได้", {
+        description: "กรุณาลองใหม่อีกครั้ง",
+      });
+    } finally {
+      setIsLoadingMessage(false);
+    }
+  };
   // ฟังก์ชันเปิด dialog followers หรือ following
   const openFollowsDialog = (tab: "followers" | "following") => {
     setDialogTab(tab);
@@ -59,6 +109,8 @@ export default function ProfileHeader({ user }: { user: User }) {
         const followingCountData = await profileService.getFollowingCount(
           user._id
         );
+        const MutalFollowData = await profileService.getMutualFollowsList();
+        console.log("Mutual Follow Data:", JSON.stringify(MutalFollowData, null, 2));
 
         setFollowersCount(followersCountData);
         setFollowingCount(followingCountData);
@@ -165,7 +217,7 @@ export default function ProfileHeader({ user }: { user: User }) {
     };
 
     checkCurrentFollowStatus();
-  }, [user?._id, currentUser, isOwnProfile]);
+  }, [user, currentUser, isOwnProfile]);
 
   return (
     <div className="flex flex-col items-center mb-4 md:mb-8 mx-auto max-w-3xl w-full px-4">
@@ -245,9 +297,20 @@ export default function ProfileHeader({ user }: { user: User }) {
                     size="sm"
                     variant="outline"
                     className="md:text-base md:py-2 md:px-4 flex items-center gap-1.5"
+                    onClick={handleMessageClick}
+                    disabled={isLoadingMessage}
                   >
-                    <MessageSquare className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                    ข้อความ
+                    {isLoadingMessage ? (
+                      <span className="flex items-center">
+                        <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
+                        รอสักครู่
+                      </span>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        ข้อความ
+                      </>
+                    )}
                   </Button>
                 </>
               )}

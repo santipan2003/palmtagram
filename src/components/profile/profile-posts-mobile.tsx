@@ -32,21 +32,21 @@ export default function MobilePostDetail({
     username: string;
   } | null>(null);
 
-  // เพิ่มฟังก์ชันสำหรับตรวจสอบไลค์
-  useEffect(() => {
-    if (profileUser) {
-      checkLikeStatus();
-    }
-  }, [profileUser]);
-
-  const checkLikeStatus = async () => {
+  const checkLikeStatus = useCallback(async () => {
     try {
       const isLiked = await postService.checkPostLikeStatus(post._id);
       setLiked(isLiked);
     } catch (err) {
       console.error("Error checking like status:", err);
     }
-  };
+  }, [post._id]);
+
+  // เพิ่มฟังก์ชัน checkLikeStatus เข้าไปใน dependency array
+  useEffect(() => {
+    if (profileUser) {
+      checkLikeStatus();
+    }
+  }, [profileUser, checkLikeStatus]);
 
   // จัดการการกดไลค์โพสต์
   const handleLike = async () => {
@@ -208,10 +208,7 @@ export default function MobilePostDetail({
     isReply = false,
     replyIndex?: number
   ) => (
-    <div
-      key={comment._id}
-      className={cn("flex gap-2 mb-2", isReply && "ml-5")}
-    >
+    <div key={comment._id} className={cn("flex gap-2 mb-2", isReply && "ml-5")}>
       <Avatar className="h-8 w-8">
         <AvatarImage
           src={comment.authorId?.profile?.avatarUrl || "/placeholder.svg"}

@@ -13,6 +13,33 @@ export const getAuthToken = (): string => {
   return tokenCookie ? tokenCookie.split("=")[1] : "";
 };
 
+export const getWebSocketToken = (): string => {
+  try {
+    // ตรวจสอบก่อนว่ามีการล็อกอินอยู่หรือไม่ - เพิ่มบรรทัดนี้
+    const userData = localStorage.getItem("user_data");
+    if (!userData) return ""; // ถ้าไม่มีข้อมูลผู้ใช้ แสดงว่ายังไม่ได้ล็อกอิน
+
+    // ลองหาใน localStorage
+    const token = localStorage.getItem("ws_auth_token");
+    if (token) return token;
+
+    // ลองหาใน cookies (ตรวจสอบด้วยว่ามีข้อมูลผู้ใช้ด้วย)
+    const cookies = document.cookie.split(";");
+    const tokenCookie = cookies.find((c) =>
+      c.trim().startsWith("access_token=")
+    );
+
+    if (tokenCookie) {
+      const extractedToken = decodeURIComponent(tokenCookie.split("=")[1]);
+      return extractedToken;
+    }
+  } catch (e) {
+    console.warn("Error accessing token storage:", e);
+  }
+
+  return "";
+};
+
 // Service สำหรับ Authentication
 export const authService = {
   // ดึงข้อมูลโปรไฟล์ผู้ใช้

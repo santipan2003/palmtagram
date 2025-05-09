@@ -4,7 +4,7 @@ import PostCard from "@/components/feed/post-card";
 import CreatePostCard from "@/components/feed/create-post-card";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useMobile } from "@/hooks/use-mobile";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Loader2 } from "lucide-react";
 import { feedService } from "@/services/feed/feed.service";
@@ -18,8 +18,8 @@ export default function FeedPage() {
   const isMobile = useMobile();
   const { user, isLoading } = useAuth();
 
-  // ดึงข้อมูลผู้ใช้จาก API
-  const fetchUserData = async () => {
+  // ดึงข้อมูลผู้ใช้จาก API - แปลงเป็น useCallback
+  const fetchUserData = useCallback(async () => {
     if (!user?._id) return;
 
     try {
@@ -28,10 +28,10 @@ export default function FeedPage() {
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
-  };
+  }, [user?._id]); // dependency คือ user._id
 
-  // ดึงข้อมูลโพสต์ทั้งหมดจาก API
-  const fetchPosts = async () => {
+  // ดึงข้อมูลโพสต์ทั้งหมดจาก API - แปลงเป็น useCallback
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
       const postsData = await feedService.getPosts();
@@ -41,7 +41,7 @@ export default function FeedPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // ไม่มี dependency
 
   // เรียกใช้ fetchUserData และ fetchPosts เมื่อ component ถูกโหลด
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function FeedPage() {
     };
 
     initData();
-  }, [isLoading, user]);
+  }, [isLoading, user, fetchUserData, fetchPosts]);
 
   // Expand sidebar on feed page for desktop
   useEffect(() => {

@@ -51,15 +51,8 @@ export default function ProfilePosts({
     username: string;
   } | null>(null);
 
-  // ตรวจสอบสถานะไลค์เมื่อเลือกโพสต์
-  useEffect(() => {
-    if (selectedPost && user) {
-      checkLikeStatus();
-    }
-  }, [selectedPost, user]);
-
   // ตรวจสอบว่าผู้ใช้ไลค์โพสต์นี้แล้วหรือยัง
-  const checkLikeStatus = async () => {
+  const checkLikeStatus = useCallback(async () => {
     if (!selectedPost) return;
 
     try {
@@ -68,7 +61,14 @@ export default function ProfilePosts({
     } catch (err) {
       console.error("Error checking like status:", err);
     }
-  };
+  }, [selectedPost]);
+
+  // ตรวจสอบสถานะไลค์เมื่อเลือกโพสต์
+  useEffect(() => {
+    if (selectedPost && user) {
+      checkLikeStatus();
+    }
+  }, [selectedPost, user, checkLikeStatus]);
 
   // จัดการการกดไลค์โพสต์
   const handleLike = async () => {

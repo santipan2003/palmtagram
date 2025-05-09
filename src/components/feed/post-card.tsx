@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -52,22 +52,22 @@ export default function PostCard({ post }: { post: ApiPost }) {
     }
   };
 
-  // ตรวจสอบสถานะไลค์เมื่อโพสต์ถูกโหลด
-  useEffect(() => {
-    if (user) {
-      checkLikeStatus();
-    }
-  }, [user]);
-
-  // ตรวจสอบว่าผู้ใช้ไลค์โพสต์นี้แล้วหรือยัง
-  const checkLikeStatus = async () => {
+  // 2. แปลงเป็น useCallback พร้อมระบุ dependency
+  const checkLikeStatus = useCallback(async () => {
     try {
       const isLiked = await postService.checkPostLikeStatus(post._id);
       setLiked(isLiked);
     } catch (err) {
       console.error("Error checking like status:", err);
     }
-  };
+  }, [post._id]); // เพิ่ม post._id เป็น dependency
+
+  // 3. เพิ่ม checkLikeStatus เข้าไปใน dependency array
+  useEffect(() => {
+    if (user) {
+      checkLikeStatus();
+    }
+  }, [user, checkLikeStatus]); // เพิ่ม checkLikeStatus ใน dependency array
 
   // จัดการการกดไลค์โพสต์
   const handleLike = async () => {

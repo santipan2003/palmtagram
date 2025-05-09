@@ -27,6 +27,20 @@ export const profileService = {
   },
 
   /**
+   * ดึงข้อมูลผู้ใช้จาก userid
+   */
+
+  getUserById: async (userId: string): Promise<User> => {
+    try {
+      const response = await apiClient.get(`/users/userId/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
+    }
+  },
+
+  /**
    * ดึงข้อมูลโพสต์ของผู้ใช้จาก userId
    */
   getUserPosts: async (userId: string): Promise<ApiPost[]> => {
@@ -280,6 +294,21 @@ export const profileService = {
       }
     } catch (error) {
       console.error("Error fetching following users:", error);
+      return [];
+    }
+  },
+
+  /**
+   * ดึงรายชื่อผู้ใช้ที่มีการติดตามซึ่งกันและกัน (mutual follows)
+   * สำหรับใช้ในการสร้างกลุ่มแชท
+   */
+  getMutualFollowsList: async (): Promise<User[]> => {
+    try {
+      const response = await apiClient.get("/follows/mutual");
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching mutual follows:", error);
       return [];
     }
   },
