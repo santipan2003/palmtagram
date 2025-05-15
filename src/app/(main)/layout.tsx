@@ -8,8 +8,7 @@ import { SidebarInset } from "@/components/ui/sidebar";
 import { cookies } from "next/headers";
 import { AuthProvider } from "@/lib/auth-context";
 import { redirect } from "next/navigation";
-
-import { Toaster } from "sonner";
+import { SocketProvider } from "@/contexts/SocketContext";
 
 export const metadata: Metadata = {
   title: "Palmtagram",
@@ -118,11 +117,12 @@ export default async function MainLayout({
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AuthProvider initialUser={initialUser} token={token}>
-        <AppSidebar />
-        <SidebarInset>
-          <main className="min-h-screen p-4 md:p-6">{children}</main>
-          <Toaster position="bottom-right" richColors />
-        </SidebarInset>
+        <SocketProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <main className="min-h-screen p-4 md:p-6">{children}</main>
+          </SidebarInset>
+        </SocketProvider>
       </AuthProvider>
     </SidebarProvider>
   );

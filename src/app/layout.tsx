@@ -2,6 +2,7 @@
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { DM_Sans, Noto_Sans_Thai } from "next/font/google";
+import { Toaster } from "sonner";
 
 // Configure fonts
 const dmSans = DM_Sans({
@@ -31,14 +32,15 @@ export default function RootLayout({
       <body className={`${dmSans.variable} ${notoSansThai.variable} font-sans`}>
         {/* Move your ThemeProvider here so its script to set the
             class on <html> runs before hydration */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster position="bottom-right" richColors />
+          </ThemeProvider>
       </body>
     </html>
   );

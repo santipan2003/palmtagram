@@ -1,9 +1,12 @@
+"use client";
+
 import { useEffect, useState, useCallback, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { chatService } from "@/services/chat/chat.service";
 import { profileService } from "@/services/profile/profile.service";
+import { notificationService } from "@/services/notification/notification.service";
 import { useAuth } from "@/lib/auth-context";
 import {
   Message,
@@ -24,6 +27,7 @@ import {
   UnreadCountsResponse,
   UnreadCountResponse,
 } from "@/interfaces/chat.interface";
+import { Notification } from "@/interfaces/notification.interface";
 
 const SOCKET_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000/messages";
@@ -54,6 +58,10 @@ export function useChat(roomId?: string) {
   const lastTypingEvents = useRef(
     new Map<string, { isTyping: boolean; timestamp: number }>()
   );
+
+  // เพิ่ม state สำหรับการแจ้งเตือน
+  const [notifications, setNotifications] = useState<Array<Notification>>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   // สร้าง Socket connection
   useEffect(() => {
@@ -226,6 +234,63 @@ export function useChat(roomId?: string) {
               }
               return newSet;
             });
+          });
+
+          // ส่วนของการแจ้งเตือนต่างๆ
+          // รับการแจ้งเตือนแบบเรียลไทม์
+          socket.on("notification", (notification) => {
+            console.log("ได้รับการแจ้งเตือน:", notification);
+
+            // เพิ่มการแจ้งเตือนใหม่ในรายการ
+            setNotifications((prev) => [notification, ...prev]);
+
+            // เพิ่มจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
+            setUnreadNotificationCount((prev) => prev + 1);
+
+            // สร้าง CustomEvent เพื่อส่งการแจ้งเตือนไปให้ component อื่นๆ
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("user:notification-received", {
+                  detail: notification,
+                })
+              );
+            }
+
+            // แสดง toast notification
+            if (notification.type === "comment") {
+              toast.info(notification.content, {
+                description: notification.data?.comment
+                  ? `"${notification.data.comment}"`
+                  : "",
+                action: {
+                  label: "ดูโพสต์",
+                  onClick: () => {
+                    // รูปแบบใหม่ /{username}/posts/{postId}
+                    const ownerUsername = notification.data?.postOwnerUsername;
+
+                    router.push(
+                      `/${ownerUsername}/post/${notification.targetId}`
+                    );
+                  },
+                },
+              });
+            } else if (notification.type === "like") {
+              toast.info(notification.content, {
+                action: {
+                  label: "ดูโพสต์",
+                  onClick: () => {
+                    // รูปแบบใหม่ /{username}/posts/{postId}
+                    const ownerUsername = notification.data?.postOwnerUsername;
+
+                    router.push(
+                      `/${ownerUsername}/post/${notification.targetId}`
+                    );
+                  },
+                },
+              });
+            } else {
+              toast.info(notification.content);
+            }
           });
 
           // จัดการเหตุการณ์ข้อผิดพลาดในการเชื่อมต่อ
@@ -846,6 +911,35 @@ export function useChat(roomId?: string) {
           }
         });
 
+        // ส่วนของการแจ้งเตือนต่างๆ
+        // รับการแจ้งเตือนแบบเรียลไทม์
+        socket.on("notification", (notification) => {
+          console.log("ได้รับการแจ้งเตือน:", notification);
+
+          // เพิ่มการแจ้งเตือนใหม่ในรายการ
+          setNotifications((prev) => [notification, ...prev]);
+
+          // เพิ่มจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
+          setUnreadNotificationCount((prev) => prev + 1);
+
+          // แสดง toast notification
+          if (notification.type === "comment") {
+            toast.info(notification.content, {
+              description: notification.data?.comment
+                ? `"${notification.data.comment}"`
+                : "",
+              action: {
+                label: "ดูโพสต์",
+                onClick: () => {
+                  router.push(`/posts/${notification.targetId}`);
+                },
+              },
+            });
+          } else {
+            toast.info(notification.content);
+          }
+        });
+
         // จัดการเมื่อถูกตัดการเชื่อมต่อ
         socket.on("disconnect", () => {
           setIsConnected(false);
@@ -1313,6 +1407,129 @@ export function useChat(roomId?: string) {
     [socketRef] // เพิ่ม dependency
   );
 
+  // ส่วนของการแจ้งเตือนต่างๆ
+  // ส่วนของการแจ้งเตือนต่างๆ
+  // ทำเครื่องหมายว่าอ่านการแจ้งเตือนแล้ว
+  const markNotificationAsRead = useCallback(
+    async (notificationId: string) => {
+      if (!currentUser) return false;
+
+      try {
+        const success = await notificationService.markNotificationAsRead(
+          notificationId
+        );
+        if (success) {
+          // อัปเดตสถานะการแจ้งเตือนแบบ optimistic
+          setNotifications((prev) =>
+            prev.map((item) =>
+              item._id === notificationId ? { ...item, isRead: true } : item
+            )
+          );
+
+          // ลดจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
+          setUnreadNotificationCount((prev) => Math.max(0, prev - 1));
+        }
+
+        return success;
+      } catch (error) {
+        console.error("ไม่สามารถทำเครื่องหมายว่าอ่านแล้ว:", error);
+        return false;
+      }
+    },
+    [currentUser]
+  );
+
+  // ดึงข้อมูลการแจ้งเตือนจาก API
+  const fetchNotifications = useCallback(
+    async (limit = 20, skip = 0, unreadOnly = false) => {
+      if (!currentUser) return [];
+
+      try {
+        const data = await notificationService.fetchNotifications(
+          limit,
+          skip,
+          unreadOnly
+        );
+
+        setNotifications((prev) => {
+          // รวมข้อมูลและกำจัด duplicates
+          const allNotifications = [...prev, ...data];
+          const uniqueNotifications = allNotifications.filter(
+            (notification, index, self) =>
+              self.findIndex((n) => n._id === notification._id) === index
+          );
+          return uniqueNotifications;
+        });
+
+        // อัปเดตจำนวนที่ยังไม่ได้อ่าน
+        const unreadCount = data.filter((item) => !item.isRead).length;
+        setUnreadNotificationCount(unreadCount);
+
+        return data;
+      } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการแจ้งเตือน:", error);
+        return [];
+      }
+    },
+    [currentUser]
+  );
+
+  // ทำเครื่องหมายว่าอ่านการแจ้งเตือนทั้งหมดแล้ว
+  const markAllNotificationsAsRead = useCallback(async () => {
+    if (!currentUser) return false;
+
+    try {
+      const success = await notificationService.markAllNotificationsAsRead();
+
+      if (success) {
+        // อัปเดตสถานะทุกการแจ้งเตือนแบบ optimistic
+        setNotifications((prev) =>
+          prev.map((item) => ({ ...item, isRead: true }))
+        );
+
+        // รีเซ็ตจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
+        setUnreadNotificationCount(0);
+      }
+
+      return success;
+    } catch (error) {
+      console.error("ไม่สามารถทำเครื่องหมายว่าอ่านทั้งหมดแล้ว:", error);
+      return false;
+    }
+  }, [currentUser]);
+
+  // ลบการแจ้งเตือน
+  const deleteNotification = useCallback(
+    async (notificationId: string) => {
+      if (!currentUser) return false;
+
+      try {
+        const success = await notificationService.deleteNotification(
+          notificationId
+        );
+
+        if (success) {
+          // ลบออกจาก state และอัพเดทจำนวนที่ยังไม่ได้อ่านถ้าจำเป็น
+          setNotifications((prev) => {
+            const deletedItem = prev.find(
+              (item) => item._id === notificationId
+            );
+            if (deletedItem && !deletedItem.isRead) {
+              setUnreadNotificationCount((count) => Math.max(0, count - 1));
+            }
+            return prev.filter((item) => item._id !== notificationId);
+          });
+        }
+
+        return success;
+      } catch (error) {
+        console.error("ไม่สามารถลบการแจ้งเตือน:", error);
+        return false;
+      }
+    },
+    [currentUser]
+  );
+
   return {
     messages,
     isLoading,
@@ -1334,5 +1551,12 @@ export function useChat(roomId?: string) {
     totalUnread,
     onRoomParticipantsChanged,
     onUserRoomsChanged,
+    // ส่วนของการแจ้งเตือน
+    notifications,
+    unreadNotificationCount,
+    markNotificationAsRead,
+    fetchNotifications,
+    markAllNotificationsAsRead,
+    deleteNotification,
   };
 }

@@ -18,7 +18,6 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
-  CornerDownRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +27,9 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiPost, ExtendedComment } from "@/interfaces/feed.interface";
 import { postService } from "@/services/feed/post.service";
 import { useRouter } from "next/navigation";
+import PostCardComment from "./post-card-comment";
+import { toast } from "sonner";
+import { useSocketContext } from "@/contexts/SocketContext";
 
 export default function PostCard({ post }: { post: ApiPost }) {
   const router = useRouter();
@@ -44,6 +46,8 @@ export default function PostCard({ post }: { post: ApiPost }) {
     username: string;
   } | null>(null);
   const { user } = useAuth();
+
+  const { markNotificationAsRead } = useSocketContext();
 
   // เพิ่มฟังก์ชันนำทางไปยังหน้าโปรไฟล์
   const navigateToProfile = (username: string) => {
@@ -327,6 +331,93 @@ export default function PostCard({ post }: { post: ApiPost }) {
     }
   };
 
+  // เพิ่ม useEffect เพื่อติดตาม notification
+
+  // ติดตามการแจ้งเตือนผ่าน CustomEvent
+  useEffect(() => {
+    if (!user || !post._id) return;
+
+    // สร้างตัวจัดการเหตุการณ์
+    const handleNotification = (event: CustomEvent) => {
+      const notification = event.detail;
+
+      // ตรวจสอบว่าการแจ้งเตือนเกี่ยวข้องกับโพสต์นี้หรือไม่
+      if (notification.payload?.postId === post._id) {
+        // แสดง toast ตามประเภทการแจ้งเตือน
+        switch (notification.type) {
+          case "like":
+            toast.info(
+              `${
+                notification.sourceUser?.username || "ใครบางคน"
+              } ถูกใจโพสต์ของคุณ`,
+              {
+                action: {
+                  label: "ดู",
+                  onClick: () => {
+                    // เมื่อคลิกให้ mark as read
+                    markNotificationAsRead(notification._id);
+                  },
+                },
+              }
+            );
+
+            // อัพเดทจำนวนไลค์แบบเรียลไทม์
+            setLikeCount((prevCount) => prevCount + 1);
+            break;
+
+          case "comment":
+            toast.info(
+              `${
+                notification.sourceUser?.username || "ใครบางคน"
+              } แสดงความคิดเห็นในโพสต์ของคุณ`,
+              {
+                description: notification.metadata?.comment
+                  ? `"${notification.metadata.comment}"`
+                  : "",
+                action: {
+                  label: "ดู",
+                  onClick: () => {
+                    // เมื่อคลิกให้ mark as read และแสดงคอมเมนต์
+                    markNotificationAsRead(notification._id);
+                    setShowComments(true);
+                    fetchComments(false);
+                  },
+                },
+              }
+            );
+
+            // อัพเดทจำนวนคอมเมนต์โดยไม่ต้อง refresh หน้า
+            post.commentCount = (post.commentCount || 0) + 1;
+            break;
+        }
+
+        // ทำเครื่องหมายว่าอ่านแล้วหลังแสดง toast
+        markNotificationAsRead(notification._id);
+      }
+    };
+
+    // ลงทะเบียนตัวรับฟังเหตุการณ์
+    window.addEventListener(
+      "user:notification-received",
+      handleNotification as EventListener
+    );
+
+    // ทำความสะอาดเมื่อ component unmount
+    return () => {
+      window.removeEventListener(
+        "user:notification-received",
+        handleNotification as EventListener
+      );
+    };
+  }, [
+    user,
+    post._id,
+    markNotificationAsRead,
+    comments,
+    loadReplies,
+    fetchComments,
+  ]);
+
   // ส่งข้อมูล comment หรือ reply ไปยัง API
   const handleSubmitComment = async () => {
     if (!commentText.trim() || !user) return;
@@ -349,6 +440,23 @@ export default function PostCard({ post }: { post: ApiPost }) {
       // ล้างข้อความและการตอบกลับ
       setCommentText("");
       setReplyingTo(null);
+
+      // ตรวจสอบว่าผู้คอมเมนต์ไม่ใช่เจ้าของโพสต์
+      const isCommentingOwnPost = user._id === post.authorId?._id;
+
+      // แสดง toast ยืนยันการคอมเมนต์
+      if (!isCommentingOwnPost) {
+        toast.success("ส่งความคิดเห็นสำเร็จ", {
+          description: replyingTo
+            ? `คุณได้ตอบกลับความคิดเห็นของ @${replyingTo.username}`
+            : `คุณได้แสดงความคิดเห็นในโพสต์ของ @${
+                post.authorId?.username || "ผู้ใช้"
+              }`,
+        });
+      } else {
+        // กรณีคอมเมนต์โพสต์ตัวเอง
+        toast.success("ส่งความคิดเห็นสำเร็จ");
+      }
 
       if (replyingTo) {
         // กรณีตอบกลับ - อัพเดตเฉพาะคอมเมนต์ที่ถูกตอบกลับ
@@ -415,117 +523,25 @@ export default function PostCard({ post }: { post: ApiPost }) {
     comment: ExtendedComment,
     index: number,
     isReply = false,
-    replyIndex?: number
+    replyIndex?: number,
+    notificationId?: string
   ) => {
-    const username = comment.authorId?.username || "";
-
     return (
-      <div
+      <PostCardComment
         key={comment._id}
-        className={cn("flex items-start space-x-2", isReply && "ml-8 mt-2")}
-      >
-        <Avatar
-          className="h-8 w-8 cursor-pointer"
-          onClick={() => navigateToProfile(username)}
-        >
-          <AvatarImage
-            src={
-              comment.authorId?.profile?.avatarUrl ||
-              "/img/avatar-placeholder.png"
-            }
-            alt={username || "ผู้ใช้"}
-          />
-          <AvatarFallback>{username.charAt(0) || "?"}</AvatarFallback>
-        </Avatar>
-
-        <div className="flex-1">
-          <div className="bg-muted/50 rounded-2xl px-3 py-2">
-            <div className="flex justify-between items-center">
-              <p
-                className="font-medium text-xs cursor-pointer hover:underline"
-                onClick={() => navigateToProfile(username)}
-              >
-                {username || "ผู้ใช้"}
-              </p>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">
-                  {formatPostDate(comment.createdAt)}
-                </p>
-                {/* ปุ่มไลค์คอมเมนต์ */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "flex items-center h-6 p-0 min-w-6",
-                    comment.isLiked ? "text-red-500" : "text-muted-foreground"
-                  )}
-                  onClick={() =>
-                    isReply && replyIndex !== undefined
-                      ? handleCommentLike(comment._id, index, replyIndex)
-                      : handleCommentLike(comment._id, index)
-                  }
-                >
-                  <Heart
-                    className={cn(
-                      "h-3.5 w-3.5",
-                      comment.isLiked && "fill-current text-red-500"
-                    )}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            {/* เนื้อหาคอมเมนต์ */}
-            <p className="text-sm">{comment.content}</p>
-
-            {/* แสดงจำนวนไลค์และปุ่มตอบกลับ */}
-            <div className="flex items-center gap-3 mt-1">
-              {comment.likeCount > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {comment.likeCount} คนถูกใจสิ่งนี้
-                </p>
-              )}
-
-              {!isReply && user && (
-                <button
-                  onClick={() => handleReply(comment._id, username)}
-                  className="text-xs text-muted-foreground hover:text-primary"
-                >
-                  ตอบกลับ
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* ปุ่มดูการตอบกลับ (แสดงเฉพาะหากมีการตอบกลับ) */}
-          {!isReply && (comment.replyCount || 0) > 0 && (
-            <button
-              onClick={() => toggleReplies(index)}
-              className="flex items-center text-xs text-muted-foreground hover:text-primary mt-1 ml-3"
-            >
-              <CornerDownRight className="mr-1 h-3 w-3" />
-              {comment.showReplies
-                ? "ซ่อนการตอบกลับ"
-                : `ดูการตอบกลับทั้งหมด (${comment.replyCount})`}
-            </button>
-          )}
-
-          {/* การตอบกลับของคอมเมนต์นี้ */}
-          {!isReply && comment.showReplies && (
-            <div className="mt-2 space-y-2">
-              {comment.isLoading ? (
-                <p className="text-xs text-muted-foreground ml-3">
-                  กำลังโหลดการตอบกลับ...
-                </p>
-              ) : (
-                comment.replies?.map((reply, rIndex) =>
-                  renderComment(reply, index, true, rIndex)
-                )
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+        comment={comment}
+        index={index}
+        isReply={isReply}
+        replyIndex={replyIndex}
+        notificationId={notificationId}
+        formatPostDate={formatPostDate}
+        navigateToProfile={navigateToProfile}
+        handleCommentLike={handleCommentLike}
+        handleReply={handleReply}
+        toggleReplies={toggleReplies}
+        renderComment={renderComment}
+        showUser={!!user}
+      />
     );
   };
 

@@ -71,4 +71,5 @@ export interface ExtendedComment extends Comment {
   replies?: ExtendedComment[];
   isLoading?: boolean;
   parentCommentId?: string;
+  notificationId?: string;
 }
