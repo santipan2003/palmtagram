@@ -86,6 +86,16 @@ export const postService = {
     }
   },
 
+  // ลบคอมเมนต์
+  deleteComment: async (commentId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/comments/${commentId}`);
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      throw error;
+    }
+  },
+
   // ตรวจสอบสถานะไลค์คอมเมนต์
   checkCommentLikeStatus: async (commentId: string): Promise<boolean> => {
     try {

@@ -4,20 +4,92 @@ export interface NotificationPayload {
   sourceUserId?: string | { _id: string; username: string };
   postId?: string;
   commentId?: string;
-  roomId?: string;
-  replyId?: string;
+  roomId?: string | null;
+  replyId?: string | null;
+  ownerUsername?: string;
+}
+
+// ข้อมูลโปรไฟล์ที่ใช้ร่วมกัน
+export interface UserProfileInfo {
+  _id: string;
+  username: string;
+  profile?: {
+    name?: string;
+    avatarUrl?: string;
+    _id?: string;
+  };
+}
+
+export interface NotificationData {
+  // ข้อมูลโพสต์
+  postId?: string;
+  postOwnerId?: string;
+  postOwnerUsername?: string;
+  postOwnerProfile?: {
+    name?: string;
+    avatarUrl?: string;
+    _id?: string;
+  };
+  postThumbnail?: string;
+  isFollowBack?: boolean; // สำหรับการติดตาม
+  followerProfile?: {
+    avatarUrl?: string;
+  };
+
+  // เพิ่มฟิลด์ postPreview
+  postPreview?: {
+    type: "image" | "video" | "text";
+    url: string;
+  };
+
+  // ข้อมูลคอมเมนต์
+  commentId?: string;
+  comment?: string;
+  commentOwnerId?: string;
+  commentOwnerUsername?: string;
+  commentOwnerProfile?: {
+    name?: string;
+    avatarUrl?: string;
+    _id?: string;
+  };
+
+  // ข้อมูลผู้ไลค์
+  likerId?: string;
+  likerUsername?: string;
+  likerProfile?: {
+    name?: string;
+    avatarUrl?: string;
+    _id?: string;
+  };
+
+  // ข้อมูลผู้แสดงคอมเมนต์
+  commenterId?: string;
+  commenterUsername?: string;
+  commenterProfile?: {
+    name?: string;
+    avatarUrl?: string;
+    _id?: string;
+  };
 }
 
 export interface Notification {
   _id: string;
   userId: string;
   type: string; // 'like', 'comment', 'follow', 'chat', 'comment_reply'
+  content?: string;
+  targetId?: string;
+  sourceId?: string;
   payload?: NotificationPayload;
+  data?: NotificationData;
   isRead: boolean;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
 
-  // Backend อาจส่งข้อมูลเพิ่มเติมที่ถูก populate แล้ว
+  // ข้อมูลที่ populate จาก triggeredBy
+  triggeredBy?: UserProfileInfo;
+
+  // ข้อมูลอื่นๆ ที่อาจมี
   message?: string;
   title?: string;
   image?: string;
@@ -27,33 +99,9 @@ export interface Notification {
   entityUrl?: string;
 
   // ข้อมูลผู้ใช้ที่ populate จาก sourceUserId
-  sourceUser?: {
-    _id: string;
-    username: string;
-    profile?: {
-      name?: string;
-      avatarUrl?: string;
-    };
-  };
-
-  // ชื่ออื่นที่อาจใช้สำหรับ sourceUser
-  from?: {
-    _id: string;
-    username: string;
-    profile?: {
-      name?: string;
-      avatarUrl?: string;
-    };
-  };
-
-  sender?: {
-    _id: string;
-    username: string;
-    profile?: {
-      name?: string;
-      avatarUrl?: string;
-    };
-  };
+  sourceUser?: UserProfileInfo;
+  from?: UserProfileInfo;
+  sender?: UserProfileInfo;
 }
 
 export interface NotificationResponse {

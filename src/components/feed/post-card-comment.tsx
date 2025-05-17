@@ -1,7 +1,19 @@
-import React from "react"; // เพิ่มการนำเข้า React
+import React, { useState } from "react"; // เพิ่มการนำเข้า React
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, CornerDownRight } from "lucide-react";
+import { Heart, CornerDownRight, Ellipsis, Loader2, Trash } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { postService } from "@/services/feed/post.service";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
+
 import { ExtendedComment } from "@/interfaces/feed.interface";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +39,11 @@ interface PostCardCommentProps {
     replyIndex?: number
   ) => React.ReactElement; // แก้จาก JSX.Element เป็น React.ReactElement
   showUser: boolean;
+  onCommentDeleted?: (
+    commentId: string,
+    isReply: boolean,
+    parentIndex?: number
+  ) => void;
 }
 
 export default function PostCardComment({
@@ -41,11 +58,87 @@ export default function PostCardComment({
   toggleReplies,
   renderComment,
   showUser = true,
+  onCommentDeleted,
 }: PostCardCommentProps) {
+  const { user } = useAuth();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const username = comment.authorId?.username || "";
 
+  // ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของคอมเมนต์หรือไม่
+  const isCommentOwner = user && user._id === comment.authorId?._id;
+
+  // ฟังก์ชันลบคอมเมนต์
+  const handleDeleteComment = async () => {
+    if (!isCommentOwner || isDeleting) return;
+
+    setIsDeleting(true);
+
+    try {
+      await postService.deleteComment(comment._id);
+      setShowDeleteDialog(false);
+
+      // แจ้งการลบสำเร็จ
+      toast.success("ลบความคิดเห็นสำเร็จ");
+
+      // แจ้งให้คอมโพเนนต์หลักทราบว่าคอมเมนต์ถูกลบแล้ว
+      if (onCommentDeleted) {
+        onCommentDeleted(comment._id, isReply, isReply ? index : undefined);
+      }
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการลบคอมเมนต์:", error);
+      toast.error("ไม่สามารถลบความคิดเห็นได้ โปรดลองอีกครั้ง");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // เพิ่มฟังก์ชัน formatCommentText ก่อน return ในฟังก์ชัน PostCardComment
+  const formatCommentText = (text: string) => {
+    // ใช้ regex เพื่อค้นหารูปแบบ @username ในข้อความ
+    const mentionRegex = /@([a-zA-Z0-9._]+)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    // หา @username ทั้งหมดในข้อความและแปลงเป็น JSX elements
+    while ((match = mentionRegex.exec(text)) !== null) {
+      // เพิ่มข้อความก่อน @username
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+
+      // เพิ่ม @username ที่มีการจัดรูปแบบและ event handler
+      const username = match[1];
+      parts.push(
+        <strong
+          key={match.index}
+          className="font-semibold text-primary cursor-pointer hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigateToProfile(username);
+          }}
+        >
+          @{username}
+        </strong>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // เพิ่มข้อความที่เหลือหลัง @username ตัวสุดท้าย
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return parts;
+  };
+
   return (
-    <div className={cn("flex items-start space-x-2", isReply && "ml-8 mt-2")}>
+    <div
+      className={cn("flex items-start space-x-2 group", isReply && "ml-8 mt-2")}
+    >
       <Avatar
         className="h-8 w-8 cursor-pointer"
         onClick={() => navigateToProfile(username)}
@@ -73,6 +166,7 @@ export default function PostCardComment({
               <p className="text-xs text-muted-foreground">
                 {formatPostDate(comment.createdAt)}
               </p>
+
               {/* ปุ่มไลค์คอมเมนต์ */}
               <Button
                 variant="ghost"
@@ -98,7 +192,7 @@ export default function PostCardComment({
           </div>
 
           {/* เนื้อหาคอมเมนต์ */}
-          <p className="text-sm">{comment.content}</p>
+          <p className="text-sm">{formatCommentText(comment.content)}</p>
 
           {/* แสดงจำนวนไลค์และปุ่มตอบกลับ */}
           <div className="flex items-center gap-3 mt-1">
@@ -108,12 +202,36 @@ export default function PostCardComment({
               </p>
             )}
 
-            {!isReply && showUser && (
+            {showUser && (
               <button
-                onClick={() => handleReply(comment._id, username)}
+                onClick={() => {
+                  if (isReply) {
+                    // กรณีตอบกลับ reply ให้ส่ง parentCommentId ของมันเป็น parentCommentId ของคอมเมนต์ใหม่ด้วย
+                    handleReply(
+                      comment.parentCommentId || comment._id,
+                      username
+                    );
+                  } else {
+                    // กรณีคอมเมนต์หลัก ทำแบบเดิม
+                    handleReply(comment._id, username);
+                  }
+                }}
                 className="text-xs text-muted-foreground hover:text-primary"
               >
                 ตอบกลับ
+              </button>
+            )}
+
+            {/* Delete Comment - แก้ไขให้ opacity เป็น 0 ปกติ และเมื่อ hover จะเป็น 1 */}
+            {isCommentOwner && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+                className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              >
+                <Ellipsis className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -147,6 +265,47 @@ export default function PostCardComment({
           </div>
         )}
       </div>
+      {/* Dialog สำหรับยืนยันการลบคอมเมนต์ */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>ลบความคิดเห็น</DialogTitle>
+            <DialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบความคิดเห็นนี้?
+              การกระทำนี้ไม่สามารถย้อนกลับได้
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              className="sm:flex-1"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteComment}
+              disabled={isDeleting}
+              className="sm:flex-1"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังลบ...
+                </>
+              ) : (
+                <>
+                  <Trash className="mr-2 h-4 w-4" />
+                  ลบความคิดเห็น
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

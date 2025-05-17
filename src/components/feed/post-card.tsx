@@ -45,6 +45,7 @@ export default function PostCard({ post }: { post: ApiPost }) {
     commentId: string;
     username: string;
   } | null>(null);
+  
   const { user } = useAuth();
 
   const { markNotificationAsRead } = useSocketContext();
@@ -169,11 +170,20 @@ export default function PostCard({ post }: { post: ApiPost }) {
 
   // จัดการการกดปุ่มตอบกลับคอมเมนต์
   const handleReply = (commentId: string, username: string) => {
+    console.log(`Replying to ${username} (Comment ID: ${commentId})`);
     setReplyingTo({ commentId, username });
+
     // โฟกัสช่องข้อความโดยใช้ ID เฉพาะของโพสต์นี้
     setTimeout(() => {
       const inputElement = document.getElementById(`comment-input-${post._id}`);
-      if (inputElement) inputElement.focus();
+      if (inputElement) {
+        inputElement.focus();
+
+        // ถ้ายังไม่มีข้อความ ให้เพิ่ม @username อัตโนมัติ
+        if (commentText.trim() === "") {
+          setCommentText(`@${username} `);
+        }
+      }
     }, 0);
   };
 
@@ -313,6 +323,12 @@ export default function PostCard({ post }: { post: ApiPost }) {
         (comment: ExtendedComment) => !comment.parentCommentId
       );
 
+      // เรียงคอมเมนต์จากเก่าไปใหม่ (คอมเมนต์เก่าอยู่บน)
+      postComments.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
       // ตรวจสอบสถานะไลค์สำหรับแต่ละคอมเมนต์ถ้าผู้ใช้ล็อกอิน
       if (user && postComments.length > 0) {
         postComments = await postService.checkCommentsLikeStatus(postComments);
@@ -423,9 +439,11 @@ export default function PostCard({ post }: { post: ApiPost }) {
     if (!commentText.trim() || !user) return;
 
     try {
+      // เพิ่มการบันทึก parentCommentId ที่ถูกต้อง
+      // โดยไม่ว่าจะตอบกลับ comment หลักหรือ reply ก็จะใช้ parentCommentId เดียวกัน
       const payload = replyingTo
         ? {
-            content: commentText,
+            content: commentText, // คงข้อความที่มี @mention ไว้
             postId: post._id,
             parentCommentId: replyingTo.commentId,
           }
@@ -434,8 +452,11 @@ export default function PostCard({ post }: { post: ApiPost }) {
             postId: post._id,
           };
 
+      console.log("Sending comment payload:", payload);
+
       // สร้างคอมเมนต์หรือตอบกลับ
-      await postService.createComment(payload);
+      const newComment = await postService.createComment(payload);
+      console.log("Comment created:", newComment);
 
       // ล้างข้อความและการตอบกลับ
       setCommentText("");
@@ -459,10 +480,11 @@ export default function PostCard({ post }: { post: ApiPost }) {
       }
 
       if (replyingTo) {
-        // กรณีตอบกลับ - อัพเดตเฉพาะคอมเมนต์ที่ถูกตอบกลับ
+        // หาคอมเมนต์หลักที่จะเพิ่มการตอบกลับเข้าไป
         const commentIndex = comments.findIndex(
           (c) => c._id === replyingTo.commentId
         );
+
         if (commentIndex > -1) {
           // เพิ่ม replyCount
           const updatedComments = [...comments];
@@ -471,7 +493,7 @@ export default function PostCard({ post }: { post: ApiPost }) {
             replyCount: (updatedComments[commentIndex].replyCount || 0) + 1,
           };
 
-          // ถ้าการตอบกลับยังแสดงอยู่ ให้โหลดใหม่
+          // ถ้าการตอบกลับยังแสดงอยู่ ให้โหลดใหม่เพื่อแสดงการตอบกลับที่เพิ่งสร้าง
           if (updatedComments[commentIndex].showReplies) {
             loadReplies(replyingTo.commentId, commentIndex);
           }
@@ -496,6 +518,50 @@ export default function PostCard({ post }: { post: ApiPost }) {
       }
     } catch (err) {
       console.error("Error posting comment:", err);
+      toast.error("ไม่สามารถส่งความคิดเห็นได้", {
+        description: "กรุณาลองใหม่อีกครั้ง",
+      });
+    }
+  };
+
+  // จัดการเมื่อคอมเมนต์ถูกลบ
+  const handleCommentDeleted = (
+    commentId: string,
+    isReply: boolean,
+    parentIndex?: number
+  ) => {
+    if (isReply && parentIndex !== undefined) {
+      // กรณีเป็นการลบการตอบกลับ
+      const updatedComments = [...comments];
+      const parentComment = updatedComments[parentIndex];
+
+      if (parentComment.replies) {
+        // ลบการตอบกลับออกจาก replies array
+        parentComment.replies = parentComment.replies.filter(
+          (reply) => reply._id !== commentId
+        );
+
+        // ลดจำนวน replyCount
+        parentComment.replyCount = Math.max(
+          0,
+          (parentComment.replyCount || 1) - 1
+        );
+
+        // อัพเดตข้อมูลคอมเมนต์หลัก
+        updatedComments[parentIndex] = parentComment;
+        setComments(updatedComments);
+      }
+    } else {
+      // กรณีเป็นการลบคอมเมนต์หลัก
+      const updatedComments = comments.filter(
+        (comment) => comment._id !== commentId
+      );
+      setComments(updatedComments);
+
+      // ลดจำนวนคอมเมนต์ของโพสต์
+      if (post.commentCount) {
+        post.commentCount = Math.max(0, post.commentCount - 1);
+      }
     }
   };
 
@@ -541,6 +607,7 @@ export default function PostCard({ post }: { post: ApiPost }) {
         toggleReplies={toggleReplies}
         renderComment={renderComment}
         showUser={!!user}
+        onCommentDeleted={handleCommentDeleted}
       />
     );
   };

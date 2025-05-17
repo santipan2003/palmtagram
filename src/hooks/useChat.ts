@@ -107,6 +107,9 @@ export function useChat(roomId?: string) {
             setIsConnected(true);
             setError(null);
 
+            // ซิงค์ข้อมูลการแจ้งเตือน
+            syncNotifications();
+
             // ร้องขอรายการผู้ใช้ออนไลน์
             socket.emit(
               "getOnlineUsers",
@@ -288,10 +291,60 @@ export function useChat(roomId?: string) {
                   },
                 },
               });
+            } else if (notification.type === "follow") {
+              toast.info(notification.content, {
+                action: {
+                  label: "ดูโปรไฟล์",
+                  onClick: () => {
+                    router.push(`/${notification.data?.username}`);
+                  },
+                },
+              });
             } else {
               toast.info(notification.content);
             }
           });
+
+          // รับการแจ้งเตือนเมื่อมีการลบการแจ้งเตือน
+          socket.on(
+            "notificationsDeleted",
+            ({ notificationIds, timestamp }) => {
+              console.log(
+                "การแจ้งเตือนถูกลบ:",
+                notificationIds,
+                "เวลา:",
+                timestamp
+              );
+
+              // นับจำนวนการแจ้งเตือนที่ยังไม่ได้อ่านที่จะถูกลบ
+              const unreadDeletedCount = notifications.filter(
+                (n) => notificationIds.includes(n._id) && !n.isRead
+              ).length;
+
+              // การแจ้งเตือนที่ถูกลบออกจาก state
+              setNotifications((prev) =>
+                prev.filter(
+                  (notification) => !notificationIds.includes(notification._id)
+                )
+              );
+
+              // ลดจำนวนการแจ้งเตือนที่ยังไม่ได้อ่านเฉพาะรายการที่ยังไม่ได้อ่าน
+              if (unreadDeletedCount > 0) {
+                setUnreadNotificationCount((prev) =>
+                  Math.max(0, prev - unreadDeletedCount)
+                );
+              }
+
+              // เพิ่มส่วนนี้ที่ทั้ง 2 ที่: ส่ง CustomEvent เพื่อแจ้งเตือนการลบ notification
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(
+                  new CustomEvent("user:notifications-deleted", {
+                    detail: { notificationIds, timestamp },
+                  })
+                );
+              }
+            }
+          );
 
           // จัดการเหตุการณ์ข้อผิดพลาดในการเชื่อมต่อ
           socket.on("connect_error", (err) => {
@@ -940,6 +993,44 @@ export function useChat(roomId?: string) {
           }
         });
 
+        // รับการแจ้งเตือนเมื่อมีการลบการแจ้งเตือน
+        socket.on("notificationsDeleted", ({ notificationIds, timestamp }) => {
+          console.log(
+            "การแจ้งเตือนถูกลบ:",
+            notificationIds,
+            "เวลา:",
+            timestamp
+          );
+
+          // นับจำนวนการแจ้งเตือนที่ยังไม่ได้อ่านที่จะถูกลบ
+          const unreadDeletedCount = notifications.filter(
+            (n) => notificationIds.includes(n._id) && !n.isRead
+          ).length;
+
+          // การแจ้งเตือนที่ถูกลบออกจาก state
+          setNotifications((prev) =>
+            prev.filter(
+              (notification) => !notificationIds.includes(notification._id)
+            )
+          );
+
+          // ลดจำนวนการแจ้งเตือนที่ยังไม่ได้อ่านเฉพาะรายการที่ยังไม่ได้อ่าน
+          if (unreadDeletedCount > 0) {
+            setUnreadNotificationCount((prev) =>
+              Math.max(0, prev - unreadDeletedCount)
+            );
+          }
+
+          // เพิ่มส่วนนี้ที่ทั้ง 2 ที่: ส่ง CustomEvent เพื่อแจ้งเตือนการลบ notification
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("user:notifications-deleted", {
+                detail: { notificationIds, timestamp },
+              })
+            );
+          }
+        });
+
         // จัดการเมื่อถูกตัดการเชื่อมต่อ
         socket.on("disconnect", () => {
           setIsConnected(false);
@@ -1529,6 +1620,29 @@ export function useChat(roomId?: string) {
     },
     [currentUser]
   );
+
+  // เพิ่มฟังก์ชันนี้เพื่อซิงค์ข้อมูลการแจ้งเตือนกับ server
+  const syncNotifications = useCallback(async () => {
+    if (!currentUser) return;
+
+    try {
+      // ดึงจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
+      const { count } = await notificationService.getUnreadCount();
+      setUnreadNotificationCount(count);
+
+      // ดึงการแจ้งเตือนล่าสุด
+      const latestNotifications = await notificationService.fetchNotifications(
+        20,
+        0,
+        false
+      );
+      setNotifications(latestNotifications);
+
+      console.log("ซิงค์ข้อมูลการแจ้งเตือนเรียบร้อย");
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการซิงค์ข้อมูลการแจ้งเตือน:", error);
+    }
+  }, [currentUser]);
 
   return {
     messages,

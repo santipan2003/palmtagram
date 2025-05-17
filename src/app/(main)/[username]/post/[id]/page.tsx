@@ -1,5 +1,5 @@
 "use client";
-
+// (main)/[username]/post/[id]/page.tsx
 import { Suspense } from "react";
 import ProfilePage from "@/components/profile/profile-page";
 import Loading from "./loading";

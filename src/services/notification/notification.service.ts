@@ -66,4 +66,14 @@ export const notificationService = {
       return false;
     }
   },
+
+  getUnreadCount: async (): Promise<{ count: number }> => {
+    try {
+      const response = await api.get("/notifications/count");
+      return response.data;
+    } catch (error) {
+      console.error("ไม่สามารถดึงจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน:", error);
+      return { count: 0 };
+    }
+  },
 };

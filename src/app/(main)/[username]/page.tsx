@@ -1,5 +1,5 @@
 "use client";
-
+// (main)/[username]/page.tsx
 import { useParams } from "next/navigation";
 import ProfilePage from "@/components/profile/profile-page";
 
