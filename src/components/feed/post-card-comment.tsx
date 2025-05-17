@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { postService } from "@/services/feed/post.service";
+import { postService } from "@/services/post.service";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 

@@ -42,7 +42,7 @@ import { toast } from "sonner";
 import { ChatRoom, Message } from "@/interfaces/chat.interface";
 import { UserProfile } from "@/interfaces/auth.interface";
 import { Switch } from "@/components/ui/switch";
-import { chatService } from "@/services/chat/chat.service";
+import { chatService } from "@/services/chat.service";
 
 interface GroupInfoDialogProps {
   open: boolean;

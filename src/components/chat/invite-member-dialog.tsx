@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { profileService } from "@/services/profile/profile.service";
-import { chatService } from "@/services/chat/chat.service";
+import { profileService } from "@/services/profile.service";
+import { chatService } from "@/services/chat.service";
 import {
   Dialog,
   DialogContent,

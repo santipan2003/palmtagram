@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { profileService } from "@/services/profile/profile.service";
-import { chatService } from "@/services/chat/chat.service";
+import { profileService } from "@/services/profile.service";
+import { chatService } from "@/services/chat.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

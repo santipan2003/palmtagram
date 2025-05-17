@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import NotificationList from "@/components/notifications/notification-list";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useMobile } from "@/hooks/use-mobile";
-import { notificationService } from "@/services/notification/notification.service";
+import { notificationService } from "@/services/notification.service";
 import { Notification } from "@/interfaces/notification.interface";
 import { useSocketContext } from "@/contexts/SocketContext";
 import { Bell, Loader2 } from "lucide-react";
@@ -132,7 +132,10 @@ export default function NotificationsPage() {
     // จัดการเมื่อมีการแจ้งเตือนแบบ real-time ผ่าน CustomEvent
     const handleNotification = (event: CustomEvent) => {
       const notification = event.detail;
-      console.log("ได้รับการแจ้งเตือนใหม่แบบ real-time:", JSON.stringify(notification, null,2));
+      console.log(
+        "ได้รับการแจ้งเตือนใหม่แบบ real-time:",
+        JSON.stringify(notification, null, 2)
+      );
 
       // ตรวจสอบว่า notification นี้มีอยู่ในรายการแล้วหรือไม่
       if (!notificationIdsRef.current.has(notification._id)) {

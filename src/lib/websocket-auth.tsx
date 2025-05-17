@@ -1,4 +1,4 @@
-import { getWebSocketToken } from "@/services/auth/auth.service";
+import { getWebSocketToken } from "@/services/auth.service";
 
 export async function ensureWebSocketToken() {
   try {

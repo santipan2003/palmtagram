@@ -5,14 +5,14 @@ import ProfileHeader from "@/components/profile/profile-header";
 import ProfilePosts from "@/components/profile/profile-posts";
 import ProfileHighlights from "@/components/profile/profile-highlights";
 import { mockProfileHighlights } from "@/lib/data/mock-data";
-import { profileService } from "@/services/profile/profile.service";
+import { profileService } from "@/services/profile.service";
 import {
   User,
   ApiPost,
   ProfilePageProps,
 } from "@/interfaces/profile.interface";
 
-export default function ProfilePage({ username }: ProfilePageProps) {
+export default function ProfilePage({ username, postId }: ProfilePageProps) {
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<ApiPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +70,12 @@ export default function ProfilePage({ username }: ProfilePageProps) {
     <div className="max-w-4xl mx-auto">
       <ProfileHeader user={user} />
       <ProfileHighlights highlights={mockProfileHighlights} />
-      <ProfilePosts posts={posts} username={username} user={user} />
+      <ProfilePosts
+        posts={posts}
+        username={username}
+        user={user}
+        initialPostId={postId}
+      />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { useMobile } from "@/hooks/use-mobile";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Loader2 } from "lucide-react";
-import { feedService } from "@/services/feed/feed.service";
+import { feedService } from "@/services/feed.service";
 import { User, ApiPost } from "@/interfaces/feed.interface";
 
 export default function FeedPage() {

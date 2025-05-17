@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/interfaces/profile.interface";
-import { profileService } from "@/services/profile/profile.service";
+import { profileService } from "@/services/profile.service";
 import { useAuth } from "@/lib/auth-context";
 import { UserCheck, UserPlus, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Heart, MessageCircle, CornerDownRight } from "lucide-react";
 import Image from "next/image";
 import { ApiPost, User, ExtendedComment } from "@/interfaces/profile.interface";
-import { postService } from "@/services/feed/post.service";
+import { postService } from "@/services/post.service";
 import { cn } from "@/lib/utils";
 
 interface MobilePostDetailProps {

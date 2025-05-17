@@ -5,7 +5,6 @@ export interface User {
   profile: Profile;
   createdAt: string;
   updatedAt: string;
-  
 }
 
 export interface Profile {
@@ -24,7 +23,15 @@ export interface Media {
 
 export interface ApiPost {
   _id: string;
-  authorId: string;
+  authorId?: {
+    _id: string;
+    username: string;
+    profile?: {
+      name: string;
+      avatarUrl: string;
+      _id: string;
+    };
+  };
   content: string;
   media: Media[];
   likeCount: number;
@@ -72,4 +79,5 @@ export interface ExtendedComment extends Comment {
 
 export interface ProfilePageProps {
   username: string;
+  postId?: string;
 }

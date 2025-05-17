@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { chatService } from "@/services/chat/chat.service";
-import { profileService } from "@/services/profile/profile.service";
-import { notificationService } from "@/services/notification/notification.service";
+import { chatService } from "@/services/chat.service";
+import { profileService } from "@/services/profile.service";
+import { notificationService } from "@/services/notification.service";
 import { useAuth } from "@/lib/auth-context";
 import {
   Message,

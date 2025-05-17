@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ExtendedComment } from "@/interfaces/feed.interface";
 import { MediaItem, MediaType } from "@/interfaces/post.interface";
+import { ApiPost } from "@/interfaces/profile.interface";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -45,6 +46,17 @@ export const postService = {
       await apiClient.delete(`/likes/post/${postId}`);
     } catch (error) {
       console.error("Error unliking post:", error);
+      throw error;
+    }
+  },
+
+  // ดึงโพสต์ทั้งหมด by Id
+  getPostById: async (postId: string): Promise<ApiPost> => {
+    try {
+      const response = await apiClient.get(`/posts/${postId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching post by ID:", error);
       throw error;
     }
   },

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -10,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { MediaItem, CreatePostCardProps } from "@/interfaces/post.interface";
-import { postService } from "@/services/feed/post.service";
+import { postService } from "@/services/post.service";
 
 export default function CreatePostCard({
   userData,

@@ -11,12 +11,12 @@ import {
 import Image from "next/image";
 import { User } from "@/interfaces/profile.interface";
 import { useAuth } from "@/lib/auth-context";
-import { profileService } from "@/services/profile/profile.service";
+import { profileService } from "@/services/profile.service";
 // เปลี่ยนจาก toast มาเป็น sonner
 import { toast } from "sonner";
-import FollowersDialog from "./followers-dialog";
+import FollowersDialog from "./profile-follow";
 import { useRouter } from "next/navigation";
-import { chatService } from "@/services/chat/chat.service";
+import { chatService } from "@/services/chat.service";
 import { ensureWebSocketToken } from "@/lib/websocket-auth";
 
 export default function ProfileHeader({ user }: { user: User }) {
@@ -71,7 +71,7 @@ export default function ProfileHeader({ user }: { user: User }) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // นำทางไปยังห้องแชท
-      router.push(`/chat/${room._id}`); 
+      router.push(`/chat/${room._id}`);
     } catch (error) {
       console.error("ไม่สามารถสร้างห้องแชทได้:", error);
       toast.error("ไม่สามารถสร้างห้องแชทได้", {
@@ -110,7 +110,10 @@ export default function ProfileHeader({ user }: { user: User }) {
           user._id
         );
         const MutalFollowData = await profileService.getMutualFollowsList();
-        console.log("Mutual Follow Data:", JSON.stringify(MutalFollowData, null, 2));
+        console.log(
+          "Mutual Follow Data:",
+          JSON.stringify(MutalFollowData, null, 2)
+        );
 
         setFollowersCount(followersCountData);
         setFollowingCount(followingCountData);

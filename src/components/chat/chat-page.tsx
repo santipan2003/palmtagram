@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useChat } from "@/hooks/useChat";
-import { chatService } from "@/services/chat/chat.service";
+import { chatService } from "@/services/chat.service";
 import { toast } from "sonner";
 import {
   Send,

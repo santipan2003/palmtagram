@@ -5,7 +5,7 @@ import { Chrome, Facebook } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { authService } from "@/services/auth/auth.service";
+import { authService } from "@/services/auth.service";
 
 export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);

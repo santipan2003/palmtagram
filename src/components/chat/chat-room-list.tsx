@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { chatService } from "@/services/chat/chat.service";
+import { chatService } from "@/services/chat.service";
 import { useAuth } from "@/lib/auth-context";
 import { useChat } from "@/hooks/useChat";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

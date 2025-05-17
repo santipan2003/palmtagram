@@ -25,7 +25,7 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { profileService } from "@/services/profile/profile.service";
+import { profileService } from "@/services/profile.service";
 
 interface NotificationCardProps {
   notification: Notification;

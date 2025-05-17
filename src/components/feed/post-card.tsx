@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { ApiPost, ExtendedComment } from "@/interfaces/feed.interface";
-import { postService } from "@/services/feed/post.service";
+import { postService } from "@/services/post.service";
 import { useRouter } from "next/navigation";
 import PostCardComment from "./post-card-comment";
 import { toast } from "sonner";
@@ -45,7 +45,7 @@ export default function PostCard({ post }: { post: ApiPost }) {
     commentId: string;
     username: string;
   } | null>(null);
-  
+
   const { user } = useAuth();
 
   const { markNotificationAsRead } = useSocketContext();
