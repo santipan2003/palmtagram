@@ -1,6 +1,6 @@
 "use client";
 
-import PostCard from "@/components/feed/post-card";
+import PostCard from "@/components/feed/feed-post";
 import CreatePostCard from "@/components/feed/create-post-card";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useMobile } from "@/hooks/use-mobile";
@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Loader2 } from "lucide-react";
 import { feedService } from "@/services/feed.service";
 import { User, ApiPost } from "@/interfaces/feed.interface";
+import SuggestionSidebar from "./feed-suggestion";
 
 export default function FeedPage() {
   const [userData, setUserData] = useState<User | null>(null);
@@ -73,17 +74,30 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <CreatePostCard userData={userData} onPostCreated={fetchPosts} />
-
-      <div className="space-y-4 mt-6">
-        {posts.length > 0 ? (
-          posts.map((post) => <PostCard key={post._id} post={post} />)
-        ) : (
-          <div className="text-center p-8 border rounded-lg bg-muted/10">
-            <p className="text-muted-foreground">ยังไม่มีโพสต์ในฟีดของคุณ</p>
+    <div className="container mx-auto p-4">
+      <div className="flex justify-center mx-auto">
+        {/* คอลัมน์หลัก - Feed */}
+        <div className="w-full max-w-[800px] mx-auto px-2 md:px-4 py-4">
+          <CreatePostCard userData={userData} onPostCreated={fetchPosts} />
+          <div className="space-y-4 mt-6">
+            {posts.length > 0 ? (
+              posts.map((post) => <PostCard key={post._id} post={post} />)
+            ) : (
+              <div className="text-center p-8 border rounded-lg bg-muted/10">
+                <p className="text-muted-foreground">
+                  ยังไม่มีโพสต์ในฟีดของคุณ
+                </p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* คอลัมน์ขวา - ข้อมูลโปรไฟล์และคำแนะนำ */}
+        <div className="hidden lg:block w-[400px] shrink-0 border-l">
+          <div className="sticky top-0 h-screen p-4 overflow-y-auto">
+            <SuggestionSidebar />
+          </div>
+        </div>
       </div>
     </div>
   );

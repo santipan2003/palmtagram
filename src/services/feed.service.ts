@@ -14,6 +14,52 @@ const apiClient = axios.create({
 
 // Service สำหรับ Feed
 export const feedService = {
+  getSuggestions: async (): Promise<User[]> => {
+    // ส่งคืนข้อมูลจำลองโดยตรง ไม่ต้องเรียก API
+    return [
+      {
+        _id: "suggestion1",
+        username: "janesmith",
+        profile: {
+          name: "Jane Smith",
+          avatarUrl: "/img/avatar1.png",
+        },
+      },
+      {
+        _id: "suggestion2",
+        username: "markwilson",
+        profile: {
+          name: "Mark Wilson",
+          avatarUrl: "/img/avatar2.png",
+        },
+      },
+      {
+        _id: "suggestion3",
+        username: "lisajohnson",
+        profile: {
+          name: "Lisa Johnson",
+          avatarUrl: "/img/avatar3.png",
+        },
+      },
+      {
+        _id: "suggestion4",
+        username: "tomparker",
+        profile: {
+          name: "Tom Parker",
+          avatarUrl: "/img/avatar4.png",
+        },
+      },
+      {
+        _id: "suggestion5",
+        username: "amywong",
+        profile: {
+          name: "Amy Wong",
+          avatarUrl: "/img/avatar5.png",
+        },
+      },
+    ];
+  },
+
   // ดึงข้อมูลผู้ใช้
   getUserData: async (userId: string): Promise<User> => {
     try {

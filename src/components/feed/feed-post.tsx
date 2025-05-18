@@ -27,7 +27,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiPost, ExtendedComment } from "@/interfaces/feed.interface";
 import { postService } from "@/services/post.service";
 import { useRouter } from "next/navigation";
-import PostCardComment from "./post-card-comment";
+import PostCardComment from "./feed-comment";
 import { toast } from "sonner";
 import { useSocketContext } from "@/contexts/SocketContext";
 

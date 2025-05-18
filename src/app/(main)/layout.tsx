@@ -118,10 +118,15 @@ export default async function MainLayout({
     <SidebarProvider defaultOpen={defaultOpen}>
       <AuthProvider initialUser={initialUser} token={token}>
         <SocketProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <main className="min-h-screen p-4 md:p-6">{children}</main>
-          </SidebarInset>
+          <div className="flex min-h-screen w-full bg-background">
+            {/* Left Sidebar */}
+            <AppSidebar />
+
+            {/* Center Content */}
+            <SidebarInset className="flex-1">
+              <main className="w-full">{children}</main>
+            </SidebarInset>
+          </div>
         </SocketProvider>
       </AuthProvider>
     </SidebarProvider>
