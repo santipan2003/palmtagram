@@ -192,7 +192,8 @@ export default function NotificationCard({
 
       if (
         notification.type === "comment" ||
-        notification.type === "comment_reply"
+        notification.type === "comment_reply" ||
+        notification.type === "reply"
       ) {
         return {
           username:
@@ -266,7 +267,15 @@ export default function NotificationCard({
           return "แสดงความคิดเห็นในโพสต์ของคุณ";
         }
       case "comment_reply":
-        return "ตอบกลับความคิดเห็นของคุณ";
+      case "reply": // เพิ่ม case reply โดยตรง
+        if (notification.data?.comment) {
+          return `ตอบกลับความคิดเห็นของคุณ: "${notification.data.comment.substring(
+            0,
+            25
+          )}${notification.data.comment.length > 25 ? "..." : ""}"`;
+        } else {
+          return "ตอบกลับความคิดเห็นของคุณ";
+        }
       case "follow":
         return "เริ่มติดตามคุณ";
       default:
@@ -322,6 +331,7 @@ export default function NotificationCard({
           <MessageCircle className="h-3 w-3 fill-blue-500 text-blue-500" />
         );
       case "comment_reply":
+      case "reply": // เพิ่ม case reply
         return <Repeat className="h-3 w-3 fill-green-500 text-green-500" />;
       case "follow":
         return <UserPlus className="h-3 w-3 text-green-500" />;
@@ -338,7 +348,8 @@ export default function NotificationCard({
     if (
       notification.type === "like" ||
       notification.type === "comment" ||
-      notification.type === "comment_reply"
+      notification.type === "comment_reply" ||
+      notification.type === "reply"
     ) {
       // ดึงข้อมูลจาก data หรือ payload
       const postId =
@@ -351,7 +362,7 @@ export default function NotificationCard({
 
       if (postId) {
         if (username) {
-          router.push(`/${username}/post/${postId}`);
+          router.push(`/post/${postId}`);
         } else {
           // หากไม่มี username ให้พยายามนำทางไปยังโพสต์โดยตรง
           router.push(`/posts/${postId}`);

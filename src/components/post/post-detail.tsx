@@ -2,10 +2,11 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ApiPost, User, ExtendedComment } from "@/interfaces/profile.interface";
+import { useState } from "react";
 
 interface PostDetailDialogProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ interface PostDetailDialogProps {
     replyIndex?: number
   ) => React.ReactElement;
   formatDate: (dateString: string) => string;
+  navigateToProfile: (username: string) => void;
 }
 
 export function PostDetailDialog({
@@ -55,8 +57,15 @@ export function PostDetailDialog({
   cancelReply,
   renderComment,
   formatDate,
+  navigateToProfile,
 }: PostDetailDialogProps) {
   const hasImageContent = post?.media && post.media[0]?.type !== "text";
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  // ฟังก์ชันสำหรับจัดการการกดปุ่ม bookmark
+  const toggleBookmark = () => {
+    setIsBookmarked((prev) => !prev);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -93,7 +102,10 @@ export function PostDetailDialog({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <Avatar className="h-8 w-8 mr-2">
+              <Avatar
+                className="h-8 w-8 mr-2 cursor-pointer"
+                onClick={() => navigateToProfile(username)}
+              >
                 <AvatarImage
                   src={user?.profile?.avatarUrl || "/placeholder.svg"}
                   alt={user?.profile?.name}
@@ -103,7 +115,12 @@ export function PostDetailDialog({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="font-semibold text-sm">{username}</p>
+                <p
+                  className="font-semibold text-sm cursor-pointer hover:underline"
+                  onClick={() => navigateToProfile(username)}
+                >
+                  {username}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Bangkok, Thailand
                 </p>
@@ -120,7 +137,10 @@ export function PostDetailDialog({
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Avatar className="h-8 w-8">
+                  <Avatar
+                    className="h-8 w-8 cursor-pointer"
+                    onClick={() => navigateToProfile(username)}
+                  >
                     <AvatarImage
                       src={user?.profile?.avatarUrl || "/placeholder.svg"}
                       alt={user?.profile?.name}
@@ -131,7 +151,12 @@ export function PostDetailDialog({
                   </Avatar>
                   <div>
                     <p className="text-sm">
-                      <span className="font-semibold mr-2">{username}</span>
+                      <span
+                        className="font-semibold mr-2 cursor-pointer hover:underline"
+                        onClick={() => navigateToProfile(username)}
+                      >
+                        {username}
+                      </span>
                       {post.content}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -166,31 +191,60 @@ export function PostDetailDialog({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center gap-4 mb-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn("h-8 w-8 p-0", liked && "text-red-500")}
-                  onClick={handleLike}
-                  disabled={!user}
-                >
-                  <Heart
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className={cn(
-                      "h-6 w-6",
-                      liked && "fill-current text-red-500"
+                      "flex items-center space-x-1",
+                      liked ? "text-red-500" : "text-muted-foreground"
                     )}
-                  />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                  <MessageCircle className="h-6 w-6" />
-                </Button>
+                    onClick={handleLike}
+                    disabled={!user}
+                  >
+                    <Heart
+                      className={cn(
+                        "h-5 w-5",
+                        liked && "fill-current text-red-500"
+                      )}
+                    />
+                    <span>{post?.likeCount || 0}</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center space-x-1 text-muted-foreground"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    <span>{post?.commentCount || 0}</span>
+                  </Button>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={
+                      isBookmarked ? "text-primary" : "text-muted-foreground"
+                    }
+                    onClick={toggleBookmark}
+                  >
+                    <Bookmark
+                      className={cn("h-5 w-5", isBookmarked && "fill-current")}
+                    />
+                  </Button>
+                </div>
               </div>
-              {post && (
-                <p className="font-semibold text-sm">{post.likeCount} likes</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                {post ? formatDate(post.createdAt) : ""}
-              </p>
             </motion.div>
 
             {/* Comment input */}

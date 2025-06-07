@@ -27,9 +27,11 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiPost, ExtendedComment } from "@/interfaces/feed.interface";
 import { postService } from "@/services/post.service";
 import { useRouter } from "next/navigation";
-import PostCardComment from "./feed-comment";
+
 import { toast } from "sonner";
 import { useSocketContext } from "@/contexts/SocketContext";
+import PostCardComment from "./feed-comment";
+import { PostDetailContainer } from "../post/post-detail-page";
 
 export default function PostCard({ post }: { post: ApiPost }) {
   const router = useRouter();
@@ -47,8 +49,18 @@ export default function PostCard({ post }: { post: ApiPost }) {
   } | null>(null);
 
   const { user } = useAuth();
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  console.log("PostCard user:", user);
 
   const { markNotificationAsRead } = useSocketContext();
+
+  const handleOpenDetailDialog = () => {
+    setShowDetailDialog(true);
+  };
+
+  const handleCloseDetailDialog = () => {
+    setShowDetailDialog(false);
+  };
 
   // เพิ่มฟังก์ชันนำทางไปยังหน้าโปรไฟล์
   const navigateToProfile = (username: string) => {
@@ -464,6 +476,8 @@ export default function PostCard({ post }: { post: ApiPost }) {
 
       // ตรวจสอบว่าผู้คอมเมนต์ไม่ใช่เจ้าของโพสต์
       const isCommentingOwnPost = user._id === post.authorId?._id;
+      console.log("user._id:", user._id);
+      console.log("post.authorId?._id:", post.authorId?._id);
 
       // แสดง toast ยืนยันการคอมเมนต์
       if (!isCommentingOwnPost) {
@@ -613,248 +627,276 @@ export default function PostCard({ post }: { post: ApiPost }) {
   };
 
   return (
-    <Card className="overflow-hidden border-b border-x-0 md:border md:rounded-xl shadow-sm mb-4">
-      <CardHeader className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Avatar
-              className="h-10 w-10 ring-2 ring-background cursor-pointer"
-              onClick={() => navigateToProfile(authorUsername)}
-            >
-              <AvatarImage src={authorAvatar} alt={authorName} />
-              <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              {/* เพิ่ม onClick ให้กับชื่อผู้สร้างโพสต์ */}
-              <p
-                className="font-medium text-sm cursor-pointer hover:underline"
+    <>
+      <Card className="overflow-hidden border-b border-x-0 md:border md:rounded-xl shadow-sm mb-4">
+        <CardHeader className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar
+                className="h-10 w-10 ring-2 ring-background cursor-pointer"
                 onClick={() => navigateToProfile(authorUsername)}
               >
-                {authorName}
-              </p>
-
-              {/* เพิ่ม onClick ให้กับ username ของผู้สร้างโพสต์ */}
-              <p className="text-xs text-muted-foreground">
-                <span
-                  className="cursor-pointer hover:underline"
+                <AvatarImage src={authorAvatar} alt={authorName} />
+                <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div>
+                {/* เพิ่ม onClick ให้กับชื่อผู้สร้างโพสต์ */}
+                <p
+                  className="font-medium text-sm cursor-pointer hover:underline"
                   onClick={() => navigateToProfile(authorUsername)}
                 >
-                  @{authorUsername}
-                </span>{" "}
-                · {postDate}
-              </p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
-            <MoreHorizontal className="h-5 w-5" />
-          </Button>
-        </div>
-      </CardHeader>
+                  {authorName}
+                </p>
 
-      <CardContent className="p-0">
-        {post.content && (
-          <div className="px-4 pb-3">
-            <p className="text-sm">{post.content}</p>
-          </div>
-        )}
-
-        {/* แสดง media เฉพาะเมื่อเป็นประเภท image หรือ video เท่านั้น */}
-        {post.media &&
-          post.media.length > 0 &&
-          post.media[activeMediaIndex].type !== "text" && (
-            <div className="relative w-full aspect-square md:aspect-video bg-muted/20">
-              <Image
-                src={post.media[activeMediaIndex].url}
-                alt="โพสต์"
-                fill
-                sizes="(max-width: 768px) 100vw, 700px"
-                className="object-contain bg-black/5"
-                loading="lazy"
-              />
-
-              {post.media.length > 1 && (
-                <>
-                  <div className="absolute top-2 right-2 bg-black/50 text-white rounded-full px-2 py-0.5 text-xs">
-                    {activeMediaIndex + 1}/{post.media.length}
-                  </div>
-
-                  <Button
-                    onClick={prevMedia}
-                    disabled={activeMediaIndex === 0}
-                    size="icon"
-                    variant="ghost"
-                    className={cn(
-                      "absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/30 text-white hover:bg-black/50",
-                      activeMediaIndex === 0 && "opacity-0"
-                    )}
+                {/* เพิ่ม onClick ให้กับ username ของผู้สร้างโพสต์ */}
+                <p className="text-xs text-muted-foreground">
+                  <span
+                    className="cursor-pointer hover:underline"
+                    onClick={() => navigateToProfile(authorUsername)}
                   >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-
-                  <Button
-                    onClick={nextMedia}
-                    disabled={activeMediaIndex === post.media.length - 1}
-                    size="icon"
-                    variant="ghost"
-                    className={cn(
-                      "absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/30 text-white hover:bg-black/50",
-                      activeMediaIndex === post.media.length - 1 && "opacity-0"
-                    )}
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                    {post.media.map((_, idx) => (
-                      <div
-                        key={idx}
-                        className={cn(
-                          "h-1.5 rounded-full",
-                          idx === activeMediaIndex
-                            ? "w-2 bg-primary"
-                            : "w-1.5 bg-white/70"
-                        )}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-      </CardContent>
-
-      <CardFooter className="p-4 flex flex-col">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "flex items-center space-x-1",
-                liked ? "text-red-500" : "text-muted-foreground"
-              )}
-              onClick={handleLike}
-            >
-              <Heart
-                className={cn("h-5 w-5", liked && "fill-current text-red-500")}
-              />
-              <span>{likeCount}</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center space-x-1 text-muted-foreground"
-              onClick={() => fetchComments()}
-            >
-              <MessageCircle className="h-5 w-5" />
-              <span>{post.commentCount || 0}</span>
-            </Button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              <Share2 className="h-5 w-5" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className={bookmarked ? "text-primary" : "text-muted-foreground"}
-              onClick={() => setBookmarked(!bookmarked)}
-            >
-              <Bookmark
-                className={cn("h-5 w-5", bookmarked && "fill-current")}
-              />
-            </Button>
-          </div>
-        </div>
-
-        {showComments && (
-          <>
-            <Separator className="my-3" />
-
-            {/* แสดงข้อความกำลังโหลด */}
-            {loading ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">
-                  กำลังโหลดความคิดเห็น...
+                    @{authorUsername}
+                  </span>{" "}
+                  · {postDate}
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4 mt-2 w-full">
-                {comments.length > 0 ? (
-                  comments.map((comment, index) =>
-                    renderComment(comment, index)
-                  )
-                ) : (
-                  <p className="text-center text-sm text-muted-foreground">
-                    ยังไม่มีความคิดเห็น
-                  </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full h-8 w-8"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {post.content && (
+            <div className="px-4 pb-3">
+              <p className="text-sm">{post.content}</p>
+            </div>
+          )}
+
+          {/* แสดง media เฉพาะเมื่อเป็นประเภท image หรือ video เท่านั้น */}
+          {post.media &&
+            post.media.length > 0 &&
+            post.media[activeMediaIndex].type !== "text" && (
+              <div className="relative w-full aspect-square md:aspect-video bg-muted/20">
+                <Image
+                  src={post.media[activeMediaIndex].url}
+                  alt="โพสต์"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 700px"
+                  className="object-contain bg-black/5"
+                  loading="lazy"
+                />
+
+                {post.media.length > 1 && (
+                  <>
+                    <div className="absolute top-2 right-2 bg-black/50 text-white rounded-full px-2 py-0.5 text-xs">
+                      {activeMediaIndex + 1}/{post.media.length}
+                    </div>
+
+                    <Button
+                      onClick={prevMedia}
+                      disabled={activeMediaIndex === 0}
+                      size="icon"
+                      variant="ghost"
+                      className={cn(
+                        "absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/30 text-white hover:bg-black/50",
+                        activeMediaIndex === 0 && "opacity-0"
+                      )}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+
+                    <Button
+                      onClick={nextMedia}
+                      disabled={activeMediaIndex === post.media.length - 1}
+                      size="icon"
+                      variant="ghost"
+                      className={cn(
+                        "absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/30 text-white hover:bg-black/50",
+                        activeMediaIndex === post.media.length - 1 &&
+                          "opacity-0"
+                      )}
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      {post.media.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "h-1.5 rounded-full",
+                            idx === activeMediaIndex
+                              ? "w-2 bg-primary"
+                              : "w-1.5 bg-white/70"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             )}
+        </CardContent>
 
-            {/* ช่องใส่ความคิดเห็น */}
-            {user && (
-              <div className="relative mt-3 w-full">
-                {replyingTo && (
-                  <div className="flex justify-between items-center px-2 py-1 bg-muted/30 rounded-t-lg text-xs text-muted-foreground">
-                    <p>
-                      กำลังตอบกลับ{" "}
-                      <span className="font-medium">
-                        @{replyingTo.username}
-                      </span>
-                    </p>
-                    <button
-                      onClick={cancelReply}
-                      className="text-xs hover:text-destructive"
-                    >
-                      ยกเลิก
-                    </button>
-                  </div>
+        <CardFooter className="p-4 flex flex-col">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "flex items-center space-x-1",
+                  liked ? "text-red-500" : "text-muted-foreground"
                 )}
+                onClick={handleLike}
+              >
+                <Heart
+                  className={cn(
+                    "h-5 w-5",
+                    liked && "fill-current text-red-500"
+                  )}
+                />
+                <span>{likeCount}</span>
+              </Button>
 
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={
-                        user.profile?.avatarUrl || "/img/avatar-placeholder.png"
-                      }
-                      alt={user.username}
-                    />
-                    <AvatarFallback>
-                      {user.username?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 relative">
-                    <Input
-                      id={`comment-input-${post._id}`}
-                      placeholder={
-                        replyingTo
-                          ? `ตอบกลับ @${replyingTo.username}...`
-                          : "เพิ่มความคิดเห็น..."
-                      }
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      className="pr-10 rounded-full bg-muted/50"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleSubmitComment}
-                      disabled={!commentText.trim()}
-                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-1 text-muted-foreground"
+                onClick={handleOpenDetailDialog}
+              >
+                <MessageCircle className="h-5 w-5" />
+                <span>{post.commentCount || 0}</span>
+              </Button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className={
+                  bookmarked ? "text-primary" : "text-muted-foreground"
+                }
+                onClick={() => setBookmarked(!bookmarked)}
+              >
+                <Bookmark
+                  className={cn("h-5 w-5", bookmarked && "fill-current")}
+                />
+              </Button>
+            </div>
+          </div>
+
+          {showComments && (
+            <>
+              <Separator className="my-3" />
+
+              {/* แสดงข้อความกำลังโหลด */}
+              {loading ? (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">
+                    กำลังโหลดความคิดเห็น...
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4 mt-2 w-full">
+                  {comments.length > 0 ? (
+                    comments.map((comment, index) =>
+                      renderComment(comment, index)
+                    )
+                  ) : (
+                    <p className="text-center text-sm text-muted-foreground">
+                      ยังไม่มีความคิดเห็น
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* ช่องใส่ความคิดเห็น */}
+              {user && (
+                <div className="relative mt-3 w-full">
+                  {replyingTo && (
+                    <div className="flex justify-between items-center px-2 py-1 bg-muted/30 rounded-t-lg text-xs text-muted-foreground">
+                      <p>
+                        กำลังตอบกลับ{" "}
+                        <span className="font-medium">
+                          @{replyingTo.username}
+                        </span>
+                      </p>
+                      <button
+                        onClick={cancelReply}
+                        className="text-xs hover:text-destructive"
+                      >
+                        ยกเลิก
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={
+                          user.profile?.avatarUrl ||
+                          "/img/avatar-placeholder.png"
+                        }
+                        alt={user.username}
+                      />
+                      <AvatarFallback>
+                        {user.username?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 relative">
+                      <Input
+                        id={`comment-input-${post._id}`}
+                        placeholder={
+                          replyingTo
+                            ? `ตอบกลับ @${replyingTo.username}...`
+                            : "เพิ่มความคิดเห็น..."
+                        }
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        className="pr-10 rounded-full bg-muted/50"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSubmitComment}
+                        disabled={!commentText.trim()}
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </CardFooter>
-    </Card>
+              )}
+            </>
+          )}
+        </CardFooter>
+      </Card>
+
+      {/* เพิ่ม PostDetailContainer สำหรับแสดงเป็น Dialog */}
+      {showDetailDialog && (
+        <PostDetailContainer
+          post={post}
+          user={post.authorId as any}
+          username={authorUsername}
+          isOpen={showDetailDialog}
+          onClose={handleCloseDetailDialog}
+        />
+      )}
+    </>
   );
 }

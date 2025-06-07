@@ -269,11 +269,9 @@ export function useChat(roomId?: string) {
                   label: "ดูโพสต์",
                   onClick: () => {
                     // รูปแบบใหม่ /{username}/posts/{postId}
-                    const ownerUsername = notification.data?.postOwnerUsername;
+                    // const ownerUsername = notification.data?.postOwnerUsername;
 
-                    router.push(
-                      `/${ownerUsername}/post/${notification.targetId}`
-                    );
+                    router.push(`/post/${notification.targetId}`);
                   },
                 },
               });
@@ -283,11 +281,9 @@ export function useChat(roomId?: string) {
                   label: "ดูโพสต์",
                   onClick: () => {
                     // รูปแบบใหม่ /{username}/posts/{postId}
-                    const ownerUsername = notification.data?.postOwnerUsername;
+                    // const ownerUsername = notification.data?.postOwnerUsername;
 
-                    router.push(
-                      `/${ownerUsername}/post/${notification.targetId}`
-                    );
+                    router.push(`/post/${notification.targetId}`);
                   },
                 },
               });
@@ -297,6 +293,19 @@ export function useChat(roomId?: string) {
                   label: "ดูโปรไฟล์",
                   onClick: () => {
                     router.push(`/${notification.data?.username}`);
+                  },
+                },
+              });
+            } else if (notification.type === "reply") {
+              // เพิ่มการจัดการแจ้งเตือนการตอบกลับ
+              toast.info(notification.content, {
+                description: notification.data?.comment
+                  ? `"${notification.data.comment}"`
+                  : "",
+                action: {
+                  label: "ดูการตอบกลับ",
+                  onClick: () => {
+                    router.push(`/post/${notification.targetId}`);
                   },
                 },
               });
